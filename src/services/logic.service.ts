@@ -50,11 +50,14 @@ const executeRequest = async (
     const channelResult: ChannelResult = { result: 0.0, channel: channel.channel_id };
     // Send TADP request with this all results - to be persisted at TADP
     try {
-      const tadpReqBody = `{"ruleResults":${JSON.stringify(ruleResults)}}, "typologyResults":${JSON.stringify(
-        typologyResults,
-      )}, "channelResult": ${JSON.stringify(channelResult)}, "transaction":${JSON.stringify(request)}, "networkMap":${JSON.stringify(
-        networkMap,
-      )}}`;
+
+      const tadpReqBody = {
+        "ruleResults": ruleResults,
+        "typologyResults": typologyResults,
+        "channelResult": channelResult,
+        "transaction": request,
+        "networkMap": networkMap
+      };
       const toSend = Buffer.from(JSON.stringify(tadpReqBody)).toString('base64');
       span = apm.startSpan(`[${transactionID}] Send Channel result to TADP`);
       await executePost(config.tadpEndpoint, toSend);
