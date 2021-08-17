@@ -1,9 +1,9 @@
 import { config } from './config';
-import apm from 'elastic-apm-node';
 import { LoggerService } from './services/logger.service';
 import App from './app';
 import { initializeRedis } from './clients/redis.client';
 import NodeCache from 'node-cache';
+import apm from 'elastic-apm-node';
 
 apm.start({
   serviceName: config.functionName,
@@ -23,7 +23,6 @@ export const runServer = async (): Promise<void> => {
   app.listen(config.restPort, () => {
     LoggerService.log(`API restServer listening on PORT ${config.restPort}`);
   });
-
 };
 
 process.on('uncaughtException', (err) => {
