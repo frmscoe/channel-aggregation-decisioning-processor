@@ -1,5 +1,4 @@
 import { Database } from 'arangojs';
-import NodeCache from 'node-cache';
 import { cache } from '..';
 import { config } from '../config';
 import { ITypologyExpression } from '../interfaces/iTypologyExpression';
@@ -41,8 +40,7 @@ class ArangoDBService {
       return typologyExpression;
     } catch (error) {
       span?.end();
-      LoggerService.error('Error while executing ArangoDB query with message:', error, 'ArangoDBService');
-      
+      LoggerService.error('Error while executing ArangoDB query with message:', error as Error, 'ArangoDBService');
     }
   }
 }

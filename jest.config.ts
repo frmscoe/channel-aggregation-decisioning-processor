@@ -37,10 +37,6 @@ const config: Config.InitialOptions = {
     'interfaces',
     '.module.ts',
     '.mock.ts',
-    './src/index.ts',
-    './src/clients/arangodb.ts',
-    './src/clients/index.ts',
-    './src/clients/redisClient.ts',
     './jest.config.ts',
   ],
 

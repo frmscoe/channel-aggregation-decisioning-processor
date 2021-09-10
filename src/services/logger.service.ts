@@ -33,19 +33,19 @@ export abstract class LoggerService {
     return `[${LoggerService.timeStamp()}][${config.functionName}${serviceOperation ? ' - ' + serviceOperation : ''}]`;
   }
 
-  static trace(message: string, serviceOperation?: string) {
+  static trace(message: string, serviceOperation?: string): void {
     logger.trace(`${LoggerService.messageStamp(serviceOperation)}[TRACE] - ${message}`);
   }
 
-  static log(message: string, serviceOperation?: string) {
+  static log(message: string, serviceOperation?: string): void {
     logger.info(`${LoggerService.messageStamp(serviceOperation)}[INFO] - ${message}`);
   }
 
-  static warn(message: string, serviceOperation?: string) {
+  static warn(message: string, serviceOperation?: string): void {
     logger.warn(`${LoggerService.messageStamp(serviceOperation)}[WARN] - ${message}`);
   }
 
-  static error(message: string | Error, innerError?: Error, serviceOperation?: string) {
+  static error(message: string | Error, innerError?: Error, serviceOperation?: string): void {
     let errMessage = typeof message === 'string' ? message : message.stack;
 
     if (innerError) {
