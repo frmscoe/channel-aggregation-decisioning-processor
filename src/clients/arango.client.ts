@@ -26,7 +26,7 @@ class ArangoDBService {
     if (cacheVal) return cacheVal as ITypologyExpression;
     const span = apm.startSpan('Fetch Channel Expression from Database');
     const typologyExpressionQuery = `
-        FOR doc IN channelExpression
+        FOR doc IN ${config.collectionName}
         FILTER doc._key == "${channelId}"
         RETURN doc
         `;

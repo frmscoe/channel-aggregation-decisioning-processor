@@ -1,9 +1,10 @@
 import { config } from './config';
 import { LoggerService } from './services/logger.service';
 import App from './app';
-import { initializeRedis } from './clients/redis.client';
+import { RedisClientService } from './services/redis.client';
 import NodeCache from 'node-cache';
 import apm from 'elastic-apm-node';
+import { iCacheService } from './interfaces/iCacheService';
 
 apm.start({
   serviceName: config.functionName,
@@ -34,8 +35,9 @@ process.on('unhandledRejection', (err) => {
 });
 
 try {
-  initializeRedis(config.redisDB, config.redisHost, config.redisPort, config.redisAuth);
   runServer();
 } catch (err) {
   LoggerService.error('Error while starting gRPC server', err, 'index.ts');
 }
+
+export const cacheService: iCacheService = new RedisClientService();

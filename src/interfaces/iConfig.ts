@@ -3,7 +3,6 @@ export interface IConfig {
   redisAuth: string;
   redisHost: string;
   redisPort: number;
-  grpcPort: number;
   restPort: number;
   logstashHost: string;
   logstashPort: number;
@@ -12,9 +11,10 @@ export interface IConfig {
   apmLogging: boolean;
   apmSecretToken: string;
   apmURL: string;
-  dev: string;
+  nodeEnv: string;
   dbURL: string;
   dbName: string;
   dbUser: string;
   dbPassword: string;
+  collectionName: string;
 }

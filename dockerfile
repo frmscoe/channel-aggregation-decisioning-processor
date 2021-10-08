@@ -11,8 +11,6 @@ RUN addgroup -S app && adduser -S -g app app
 
 RUN apk --no-cache add curl ca-certificates
 
-RUN apk add --no-cache -t build-dependencies git make gcc g++ python libtool autoconf automake yarn
-
 # Turn down the verbosity to default level.
 ENV NPM_CONFIG_LOGLEVEL warn
 
@@ -23,7 +21,7 @@ RUN mkdir -p /home/app
 WORKDIR /home/app
 
 COPY ./package.json ./
-COPY ./yarn.lock ./
+COPY ./package-lock.json ./
 COPY ./tsconfig.json ./
 COPY ./global.d.ts ./
 
@@ -31,12 +29,12 @@ COPY ./global.d.ts ./
 # RUN yarn run cleanup
 
 # Install dependencies
-RUN yarn install
+RUN npm install
 
 COPY ./src ./src
 
 # Build the project
-RUN yarn run build
+RUN npm run build
 
 # Environment variables for openfaas
 ENV cgi_headers="true"
@@ -49,24 +47,23 @@ ENV write_timeout="15s"
 ENV read_timeout="15s"
 
 ENV REST_PORT=3000
-ENV GRPC_PORT=50051
 ENV FUNCTION_NAME=channel-aggregation-decisioning-processor
-ENV RULE_ENDPOINT=http://gateway.frm:8080/function/
 ENV APM_LOGGING=true
-ENV APM_URL=http://apm-server-apm-server.frm:8200
+ENV APM_URL=http://apm-server.development:8200
 ENV APM_SECRET_TOKEN=
 ENV NODE_ENV=prod
-ENV LOGSTASH_HOST=my-release-logstash.frm-meshed
+ENV LOGSTASH_HOST=logstash.development
 ENV LOGSTASH_PORT=8080
-ENV DB_URL=http://arango.frm:8529
-ENV DB_NAME=configuration
+ENV DB_URL=http://arango.development:8529
+ENV DB_NAME=Configuration
 ENV DB_USER=root
-ENV DB_PASSWORD=123456
-ENV REDIS_HOST=my-redis-master.frm
+ENV DB_PASSWORD='$!prAtHe>Qh5X9D3'
+ENV COLLECTION_NAME=channelExpression
+ENV REDIS_HOST=20.108.120.33
 ENV REDIS_PORT=6379
 ENV REDIS_DB=0
-ENV REDIS_AUTH=TjEmUWes67
-ENV TADP_ENDPOINT=http://gateway.frm:8080/function/off-frm-transaction-aggregation-decisioning-processor.frm-meshed/execute
+ENV REDIS_AUTH=utiYxjU3gK
+ENV TADP_ENDPOINT=http://gateway.openfaas:8080/function/off-transaction-aggregation-decisioning-processor.openfaas-fn/execute
 
 ENV prefix_logs="false"
 
