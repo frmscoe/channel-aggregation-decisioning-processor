@@ -1,6 +1,6 @@
 import { config } from '../config';
 import { LoggerService } from './logger.service';
-import { CustomerCreditTransferInitiation } from '../classes/iPain001Transaction';
+import { IPain001Message } from '../interfaces/iPain001';
 import { Channel, NetworkMap } from '../classes/network-map';
 import { RuleResult } from '../classes/rule-result';
 import { TypologyResult } from '../classes/typology-result';
@@ -10,7 +10,7 @@ import apm from 'elastic-apm-node';
 import { cacheService } from '..';
 
 const executeRequest = async (
-  request: CustomerCreditTransferInitiation,
+  request: IPain001Message,
   channel: Channel,
   ruleResults: RuleResult[],
   networkMap: NetworkMap,
@@ -19,8 +19,8 @@ const executeRequest = async (
   // Have to manually start transaction because we are not making use of one of the out-of-the-box solutions (eg, express / koa server)
   let span;
   try {
-    const transactionID = request.PaymentInformation.CreditTransferTransactionInformation.PaymentIdentification.EndToEndIdentification;
-    const cacheKey = `${transactionID}_${channel.channel_id}`;
+    const transactionID = request.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
+    const cacheKey = `${transactionID}_${channel.id}`;
     const jtypologyResults = await cacheService.getJson(cacheKey);
     const typologyResults: TypologyResult[] = [];
 
@@ -29,7 +29,6 @@ const executeRequest = async (
     if (typologyResults.some((t) => t.typology === typologyResult.typology)) return 'Incomplete';
 
     typologyResults.push({ typology: typologyResult.typology, result: typologyResult.result });
-
     // check if all results for this Channel is found
     if (typologyResults.length < channel.typologies.length) {
       span = apm.startSpan(`[${transactionID}] Save Channel interim rule results to Cache`);
@@ -44,7 +43,7 @@ const executeRequest = async (
     // if (!expressionRes)
     //   return 0.0;
 
-    const channelResult: ChannelResult = { result: 0.0, channel: channel.channel_id };
+    const channelResult: ChannelResult = { result: 0.0, channel: channel.id };
     // Send TADP request with this all results - to be persisted at TADP
     try {
       const tadpReqBody = {
@@ -68,27 +67,26 @@ const executeRequest = async (
     return 'Complete';
   } catch (error) {
     span?.end();
-    LoggerService.error(`Failed to process Channel ${channel.channel_id} request`, error as Error, 'executeRequest');
+    LoggerService.error(`Failed to process Channel ${channel.id} request`, error as Error, 'executeRequest');
     return 'Error';
   }
 };
 
 export const handleTransaction = async (
-  req: CustomerCreditTransferInitiation,
+  req: IPain001Message,
   networkMap: NetworkMap,
   ruleResult: RuleResult[],
   typologyResult: TypologyResult,
 ): Promise<string> => {
   let channelCounter = 0;
   const toReturn = [];
-  for (const channel of networkMap.transactions[0].channels) {
+  for (const channel of networkMap.messages[0].channels) {
     channelCounter++;
     const channelRes = await executeRequest(req, channel, ruleResult, networkMap, typologyResult);
-    toReturn.push(`{"Channel": ${channel.channel_id}, "Result":${channelRes}}`);
-    console.log(channelCounter);
+    toReturn.push(`{"Channel": ${channel.id}, "Result":${channelRes}}`);
   }
 
-  const result = `${channelCounter} channels initiated for transaction ID: ${req.PaymentInformation.CreditTransferTransactionInformation.PaymentIdentification.EndToEndIdentification}, with the following results:\r\n${toReturn}`;
+  const result = `${channelCounter} channels initiated for transaction ID: ${req.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId}, with the following results:\r\n${toReturn}`;
   LoggerService.log(result);
   return result;
 };
@@ -104,7 +102,7 @@ const executePost = async (endpoint: string, request: any): Promise<void | Error
     }
     LoggerService.log(`Success response from TADP with message: ${res.toString()}`);
   } catch (err) {
-    LoggerService.error(`Error while sending request to TADP`, err);
+    LoggerService.error('Error while sending request to TADP', err);
     LoggerService.trace(`Error while sending request to TADP with Request:\r\n${request}`);
     throw Error(err as string);
   }
