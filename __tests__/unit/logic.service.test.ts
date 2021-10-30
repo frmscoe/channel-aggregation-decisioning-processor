@@ -57,29 +57,30 @@ describe('Logic Service', () => {
     it('should handle successful request, with an unmatched number', async () => {
       const expectedReq = getMockTransaction();
 
-      const ruleResult: RuleResult[] = [{ result: true, rule: '001_Derived_account_age_payee' }];
+      const ruleResult: RuleResult[] = [{ result: true, rule: 'Rule_15_1.4' }];
 
       const networkMap = getMockNetworkMapWithMultipleChannels();
-      const typologyResult: TypologyResult = { result: 50, typology: 'Typology_29.1.0' };
+      const typologyResult: TypologyResult = { result: 50, typology: '030@1.0' };
 
       const result = await handleTransaction(expectedReq, networkMap, ruleResult, typologyResult);
-      expect(result.replace(/\s/g, '')).toEqual(
-        `2 channels initiated for transaction ID: ${expectedReq.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId}, with the following results:
-{"Channel": 001@1.0, "Result":Incomplete},{"Channel":002@1.0,"Result":Incomplete}`.replace(/\s/g, ''),
+      expect(result.msg).toEqual(
+        `2 channels initiated for transaction ID: ${expectedReq.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId}`,
       );
+      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Incomplete},{"Channel": 002@1.0, "Result":Incomplete}');
     });
 
     it('should handle successful request, with a matched number', async () => {
       const expectedReq = getMockTransaction();
 
-      const ruleResult: RuleResult[] = [{ result: true, rule: '001_Derived_account_age_payee' }];
+      const ruleResult: RuleResult[] = [{ result: true, rule: 'Rule_05_1.0' }];
       const networkMap = getMockNetworkMap();
-      const typologyResult: TypologyResult = { result: 50, typology: 'Typology_29.1.0' };
+      const typologyResult: TypologyResult = { result: 50, typology: '028@1.0' };
       const result = await handleTransaction(expectedReq, networkMap, ruleResult, typologyResult);
-      expect(result.replace(/\s/g, '')).toEqual(
-        `1 channels initiated for transaction ID: ${expectedReq.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId}, with the following results:
-{"Channel": 001@1.0, "Result":Complete}`.replace(/\s/g, ''),
+      expect(result.msg).toEqual(
+        `1 channels initiated for transaction ID: ${expectedReq.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId}`,
       );
+      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Complete}');
+      expect(result.tadpReqBody).toBeDefined();
     });
   });
 });
