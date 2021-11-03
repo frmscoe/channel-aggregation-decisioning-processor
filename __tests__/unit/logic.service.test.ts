@@ -57,7 +57,7 @@ describe('Logic Service', () => {
     it('should handle successful request, with an unmatched number', async () => {
       const expectedReq = getMockTransaction();
 
-      const ruleResult: RuleResult[] = [{ result: true, rule: 'Rule_15_1.4' }];
+      const ruleResult: RuleResult[] = [{ result: true, rule: 'Rule_15_1.4', subRuleRef: '', reason: '' }];
 
       const networkMap = getMockNetworkMapWithMultipleChannels();
       const typologyResult: TypologyResult = { result: 50, typology: '030@1.0' };
@@ -72,7 +72,7 @@ describe('Logic Service', () => {
     it('should handle successful request, with a matched number', async () => {
       const expectedReq = getMockTransaction();
 
-      const ruleResult: RuleResult[] = [{ result: true, rule: 'Rule_05_1.0' }];
+      const ruleResult: RuleResult[] = [{ result: true, rule: 'Rule_05_1.0', subRuleRef: '', reason: '' }];
       const networkMap = getMockNetworkMap();
       const typologyResult: TypologyResult = { result: 50, typology: '028@1.0' };
       const result = await handleTransaction(expectedReq, networkMap, ruleResult, typologyResult);
