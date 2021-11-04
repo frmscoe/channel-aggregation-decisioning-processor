@@ -6,13 +6,13 @@ import NodeCache from 'node-cache';
 import apm from 'elastic-apm-node';
 import { iCacheService } from './interfaces/iCacheService';
 
-// apm.start({
-//   serviceName: config.functionName,
-//   secretToken: config.apmSecretToken,
-//   serverUrl: config.apmURL,
-//   usePathAsTransactionName: true,
-//   active: config.apmLogging,
-// });
+apm.start({
+  serviceName: config.functionName,
+  secretToken: config.apmSecretToken,
+  serverUrl: config.apmURL,
+  usePathAsTransactionName: true,
+  active: config.apmLogging,
+});
 
 export const cache = new NodeCache();
 
