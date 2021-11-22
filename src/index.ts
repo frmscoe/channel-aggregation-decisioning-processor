@@ -12,6 +12,9 @@ apm.start({
   serverUrl: config.apmURL,
   usePathAsTransactionName: true,
   active: config.apmLogging,
+  transactionIgnoreUrls: [
+    '/health'
+  ],
 });
 
 export const cache = new NodeCache();
