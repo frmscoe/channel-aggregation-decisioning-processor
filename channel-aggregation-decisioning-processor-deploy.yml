@@ -7,7 +7,7 @@ functions:
     namespace: openfaas-fn
     lang: dockerfile
     handler: .
-    image: actio.azurecr.io/frm-channel-aggregation-decisioning-processor:latest
+    image: actio.azurecr.io/off-channel-aggregation-decisioning-processor:latest
     annotations:
       com.openfaas.health.http.path: /health
       com.openfaas.health.http.initialDelay: "45s"
