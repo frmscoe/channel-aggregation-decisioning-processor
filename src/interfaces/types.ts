@@ -6,8 +6,6 @@ import { ChannelResult } from '../classes/channel-result';
 
 export type TadpReqBody = {
   transaction: IPain001Message;
-  ruleResults: RuleResult[];
-  typologyResult: TypologyResult[];
   networkMap: NetworkMap;
   channelResult: ChannelResult;
 };

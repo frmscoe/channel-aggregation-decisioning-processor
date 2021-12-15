@@ -13,7 +13,7 @@ import { cacheService } from '..';
 const executeRequest = async (
   request: IPain001Message,
   channel: Channel,
-  ruleResults: RuleResult[],
+  //ruleResults: RuleResult[],
   networkMap: NetworkMap,
   typologyResult: TypologyResult,
 ): Promise<ExecRequest> => {
@@ -21,24 +21,24 @@ const executeRequest = async (
   let span;
   try {
     const transactionID = request.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
-    const cacheKey = `${transactionID}_${channel.id}`;
+    const cacheKey = `${transactionID}_${channel.id}_${channel.cfg}`;
     const jtypologyResults = await cacheService.getJson(cacheKey);
     const typologyResults: TypologyResult[] = [];
     if (jtypologyResults && jtypologyResults.length > 0) Object.assign(typologyResults, JSON.parse(jtypologyResults));
 
-    if (!channel.typologies.some((t) => t.id === typologyResult.typology))
+    if (!channel.typologies.some((t) => t.id === typologyResult.id && t.cfg === typologyResult.cfg))
       return {
         result: 'Incomplete',
         tadpReqBody: undefined,
       };
 
-    if (typologyResults.some((t) => t.typology === typologyResult.typology))
+    if (typologyResults.some((t) => t.id === typologyResult.id && t.cfg === typologyResult.cfg))
       return {
         result: 'Incomplete',
         tadpReqBody: undefined,
       };
 
-    typologyResults.push({ typology: typologyResult.typology, result: typologyResult.result });
+    typologyResults.push({ id: typologyResult.id, cfg: typologyResult.cfg, result: typologyResult.result, ruleResults: typologyResult.ruleResults });
     // check if all results for this Channel is found
     if (typologyResults.length < channel.typologies.length) {
       span = apm.startSpan(`[${transactionID}] Save Channel interim rule results to Cache`);
@@ -56,14 +56,12 @@ const executeRequest = async (
     // if (!expressionRes)
     //   return 0.0;
 
-    const channelResult: ChannelResult = { result: 0.0, channel: channel.id };
+    const channelResult: ChannelResult = { result: 0.0, cfg: channel.cfg, id: channel.id, typologyResult: typologyResults };
     // Send TADP request with this all results - to be persisted at TADP
     let tadpReqBody;
     try {
       tadpReqBody = {
         transaction: request,
-        ruleResults: ruleResults,
-        typologyResult: typologyResults,
         networkMap: networkMap,
         channelResult: channelResult,
       };
@@ -94,7 +92,7 @@ const executeRequest = async (
 export const handleTransaction = async (
   req: IPain001Message,
   networkMap: NetworkMap,
-  ruleResult: RuleResult[],
+  //ruleResult: RuleResult[],
   typologyResult: TypologyResult,
 ): Promise<Result> => {
   let channelCounter = 0;
@@ -103,7 +101,7 @@ export const handleTransaction = async (
   let channelRes;
   for (const channel of networkMap.messages[0].channels) {
     channelCounter++;
-    channelRes = await executeRequest(req, channel, ruleResult, networkMap, typologyResult);
+    channelRes = await executeRequest(req, channel, networkMap, typologyResult);
     toReturn.push(`{"Channel": ${channel.id}, "Result":${channelRes.result}}`);
     tadProc.push({ tadProc: channelRes?.tadpReqBody });
   }

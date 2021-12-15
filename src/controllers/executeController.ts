@@ -9,10 +9,9 @@ export const execute = async (ctx: Context, next: Next): Promise<void | Context>
   const reqBody = ctx.request.body as Record<string, unknown>;
   const req = reqBody.transaction as IPain001Message;
   const networkMap = reqBody.networkMap as NetworkMap;
-  const ruleResult = reqBody.ruleResults as RuleResult[];
   const typologyResult = reqBody.typologyResult as TypologyResult;
 
-  const result = await handleTransaction(req, networkMap, ruleResult, typologyResult);
+  const result = await handleTransaction(req, networkMap, typologyResult);
 
   ctx.body = result;
   ctx.status = 200;
