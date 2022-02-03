@@ -57,12 +57,12 @@ describe('Logic Service', () => {
     it('should handle successful request, with an unmatched number', async () => {
       const expectedReq = getMockTransaction();
 
-      const ruleResult: RuleResult[] = [{ result: true, rule: 'Rule_15_1.4', subRuleRef: '', reason: '' }];
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
 
       const networkMap = getMockNetworkMapWithMultipleChannels();
-      const typologyResult: TypologyResult = { result: 50, typology: '030@1.0' };
+      const typologyResult: TypologyResult = { result: 50, id: '', cfg: '', ruleResults };
 
-      const result = await handleTransaction(expectedReq, networkMap, ruleResult, typologyResult);
+      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
       expect(result.msg).toEqual(
         `2 channels initiated for transaction ID: ${expectedReq.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId}`,
       );
@@ -72,10 +72,10 @@ describe('Logic Service', () => {
     it('should handle successful request, with a matched number', async () => {
       const expectedReq = getMockTransaction();
 
-      const ruleResult: RuleResult[] = [{ result: true, rule: 'Rule_05_1.0', subRuleRef: '', reason: '' }];
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
       const networkMap = getMockNetworkMap();
-      const typologyResult: TypologyResult = { result: 50, typology: '028@1.0' };
-      const result = await handleTransaction(expectedReq, networkMap, ruleResult, typologyResult);
+      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', ruleResults };
+      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
       expect(result.msg).toEqual(
         `1 channels initiated for transaction ID: ${expectedReq.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId}`,
       );
