@@ -13,7 +13,6 @@ import { cacheService } from '..';
 const executeRequest = async (
   request: IPain001Message,
   channel: Channel,
-  //ruleResults: RuleResult[],
   networkMap: NetworkMap,
   typologyResult: TypologyResult,
 ): Promise<ExecRequest> => {
@@ -38,7 +37,12 @@ const executeRequest = async (
         tadpReqBody: undefined,
       };
 
-    typologyResults.push({ id: typologyResult.id, cfg: typologyResult.cfg, result: typologyResult.result, ruleResults: typologyResult.ruleResults });
+    typologyResults.push({
+      id: typologyResult.id,
+      cfg: typologyResult.cfg,
+      result: typologyResult.result,
+      ruleResults: typologyResult.ruleResults,
+    });
     // check if all results for this Channel is found
     if (typologyResults.length < channel.typologies.length) {
       span = apm.startSpan(`[${transactionID}] Save Channel interim rule results to Cache`);
@@ -92,7 +96,7 @@ const executeRequest = async (
 export const handleTransaction = async (
   req: IPain001Message,
   networkMap: NetworkMap,
-  //ruleResult: RuleResult[],
+  // ruleResult: RuleResult[],
   typologyResult: TypologyResult,
 ): Promise<Result> => {
   let channelCounter = 0;
