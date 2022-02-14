@@ -47,7 +47,7 @@ ENV write_timeout="15s"
 ENV read_timeout="15s"
 
 ENV REST_PORT=3000
-ENV FUNCTION_NAME=channel-aggregation-decisioning-processor
+ENV FUNCTION_NAME=channel-aggregation-decisioning-processor-rel-1-0-0
 ENV APM_LOGGING=true
 ENV APM_URL=http://apm-server.development:8200
 ENV APM_SECRET_TOKEN=
@@ -57,13 +57,13 @@ ENV LOGSTASH_PORT=8080
 ENV DB_URL=http://arango.development:8529
 ENV DB_NAME=Configuration
 ENV DB_USER=root
-ENV DB_PASSWORD='$!prAtHe>Qh5X9D3'
+ENV DB_PASSWORD=''
 ENV COLLECTION_NAME=channelExpression
-ENV REDIS_HOST=20.108.120.33
+ENV REDIS_HOST=
 ENV REDIS_PORT=6379
 ENV REDIS_DB=0
-ENV REDIS_AUTH=utiYxjU3gK
-ENV TADP_ENDPOINT=http://gateway.openfaas:8080/function/off-transaction-aggregation-decisioning-processor.openfaas-fn/execute
+ENV REDIS_AUTH=
+ENV TADP_ENDPOINT=http://gateway.openfaas:8080/function/off-transaction-aggregation-decisioning-processor-rel-1-0-0/execute
 
 ENV prefix_logs="false"
 
