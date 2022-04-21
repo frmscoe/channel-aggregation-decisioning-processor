@@ -11,15 +11,15 @@ import apm from 'elastic-apm-node';
 import { cacheService } from '..';
 
 const executeRequest = async (
-  request: IPain001Message,
+  transaction: any,
   channel: Channel,
   networkMap: NetworkMap,
   typologyResult: TypologyResult,
 ): Promise<ExecRequest> => {
-  // Have to manually start transaction because we are not making use of one of the out-of-the-box solutions (eg, express / koa server)
   let span;
   try {
-    const transactionID = request.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId;
+    let transactionType = Object.keys(transaction).find(k => k !== "TxTp") ?? "";
+    const transactionID = transaction[transactionType].GrpHdr.MsgId;
     const cacheKey = `${transactionID}_${channel.id}_${channel.cfg}`;
     const jtypologyResults = await cacheService.getJson(cacheKey);
     const typologyResults: TypologyResult[] = [];
@@ -65,7 +65,7 @@ const executeRequest = async (
     let tadpReqBody;
     try {
       tadpReqBody = {
-        transaction: request,
+        transaction: transaction,
         networkMap: networkMap,
         channelResult: channelResult,
       };
@@ -94,7 +94,7 @@ const executeRequest = async (
 };
 
 export const handleTransaction = async (
-  req: IPain001Message,
+  req: any,
   networkMap: NetworkMap,
   // ruleResult: RuleResult[],
   typologyResult: TypologyResult,
@@ -110,14 +110,17 @@ export const handleTransaction = async (
     tadProc.push({ tadProc: channelRes?.tadpReqBody });
   }
   let tadpReq = tadProc.map((element) => element.tadProc);
+  let transactionType = Object.keys(req).find(k => k !== "TxTp") ?? "";
+  const transactionID = req[transactionType].GrpHdr.MsgId;
+
 
   const result = {
-    msg: `${channelCounter} channels initiated for transaction ID: ${req.CstmrCdtTrfInitn.PmtInf.CdtTrfTxInf.PmtId.EndToEndId}`,
+    msg: `${channelCounter} channels initiated for transaction ID: ${transactionID}`,
     result: `${toReturn}`,
     tadpReqBody: tadpReq[0] || tadpReq[1],
   };
   tadpReq = [];
-  LoggerService.log(result.msg);
+  LoggerService.log(`${result.msg} for Typology ${typologyResult.id}`);
   return result;
 };
 

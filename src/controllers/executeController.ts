@@ -7,7 +7,7 @@ import { handleTransaction } from '../services/logic.service';
 
 export const execute = async (ctx: Context, next: Next): Promise<void | Context> => {
   const reqBody = ctx.request.body as Record<string, unknown>;
-  const req = reqBody.transaction as IPain001Message;
+  const req = reqBody.transaction;
   const networkMap = reqBody.networkMap as NetworkMap;
   const typologyResult = reqBody.typologyResult as TypologyResult;
 
