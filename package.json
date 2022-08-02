@@ -39,7 +39,7 @@
     "log4js": "^6.3.0",
     "node-cache": "^5.1.2",
     "redis": "^3.0.2",
-    "shelljs": "^0.8.4",
+    "shelljs": "^0.8.5",
     "swagger2-koa": "^3.0.0"
   },
   "devDependencies": {
