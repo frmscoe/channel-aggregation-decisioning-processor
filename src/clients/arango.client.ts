@@ -4,17 +4,22 @@ import { config } from '../config';
 import { ITypologyExpression } from '../interfaces/iTypologyExpression';
 import { LoggerService } from '../services/logger.service';
 import apm from 'elastic-apm-node';
+import * as fs from 'fs'
 
 class ArangoDBService {
   client: Database;
 
   constructor() {
+    const caOption = fs.existsSync("/usr/local/share/ca-certificates/ca-certificates.crt") ? [fs.readFileSync("/usr/local/share/ca-certificates/ca-certificates.crt")] : []
     this.client = new Database({
       url: config.dbURL,
       databaseName: config.dbName,
       auth: {
         username: config.dbUser,
         password: config.dbPassword,
+      },
+      agentOptions: {
+        ca: caOption
       },
     });
 
