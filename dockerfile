@@ -9,8 +9,6 @@ RUN chmod +x /usr/bin/fwatchdog
 
 RUN addgroup -S app && adduser -S -g app app
 
-RUN apk --no-cache add curl ca-certificates
-
 # Turn down the verbosity to default level.
 ENV NPM_CONFIG_LOGLEVEL warn
 
