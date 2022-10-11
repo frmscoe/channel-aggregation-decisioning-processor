@@ -40,7 +40,7 @@
     "node-cache": "^5.1.2",
     "redis": "^3.0.2",
     "shelljs": "^0.8.5",
-    "swagger2-koa": "^3.0.0"
+    "swagger2-koa": "^4.0.0"
   },
   "devDependencies": {
     "@types/elastic-apm-node": "^2.7.0",
