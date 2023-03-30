@@ -61,7 +61,7 @@ ENV REDIS_HOST=
 ENV REDIS_PORT=6379
 ENV REDIS_DB=0
 ENV REDIS_AUTH=
-ENV TADP_ENDPOINT=http://gateway.openfaas:8080/function/off-transaction-aggregation-decisioning-processor-rel-1-0-0/execute
+ENV TADP_ENDPOINT=
 
 ENV prefix_logs="false"
 
