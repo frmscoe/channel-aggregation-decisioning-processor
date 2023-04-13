@@ -6,7 +6,7 @@ import { LoggerService } from '../services/logger.service';
 import apm from 'elastic-apm-node';
 import * as fs from 'fs'
 
-class ArangoDBService {
+export class ArangoDBService {
   client: Database;
 
   constructor() {
@@ -49,5 +49,3 @@ class ArangoDBService {
     }
   }
 }
-
-export const arangoDBService: ArangoDBService = new ArangoDBService();

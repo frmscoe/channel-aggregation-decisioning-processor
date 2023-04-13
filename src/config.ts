@@ -8,6 +8,7 @@ dotenv({
 });
 
 export const config: IConfig = {
+  maxCPU: parseInt(process.env.MAX_CPU!, 10) || Number.MAX_SAFE_INTEGER,
   redisDB: <string>process.env.REDIS_DB,
   redisAuth: <string>process.env.REDIS_AUTH,
   redisHost: <string>process.env.REDIS_HOST,
