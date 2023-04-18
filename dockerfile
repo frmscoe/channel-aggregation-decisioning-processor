@@ -45,7 +45,7 @@ ENV write_timeout="15s"
 ENV read_timeout="15s"
 
 ENV REST_PORT=3000
-ENV FUNCTION_NAME=channel-aggregation-decisioning-processor-rel-1-0-0
+ENV FUNCTION_NAME="channel-aggregation-decisioning-processor-rel-1-1-0"
 ENV APM_LOGGING=true
 ENV APM_URL=http://apm-server.development:8200
 ENV APM_SECRET_TOKEN=
