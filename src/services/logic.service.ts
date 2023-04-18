@@ -105,6 +105,7 @@ export const handleTransaction = async (
   let channelRes;
   for (const channel of networkMap.messages[0].channels) {
     channelCounter++;
+    LoggerService.log(`Channel[${channelCounter}] executing request`)
     channelRes = await executeRequest(req, channel, networkMap, typologyResult);
     toReturn.push(`{"Channel": ${channel.id}, "Result":${channelRes.result}}`);
     tadProc.push({ tadProc: channelRes?.tadpReqBody });
