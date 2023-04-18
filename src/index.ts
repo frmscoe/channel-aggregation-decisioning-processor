@@ -1,13 +1,12 @@
-import { config } from './config';
-import { LoggerService } from './services/logger.service';
-import App from './app';
-import { RedisClientService } from './services/redis.client';
-import NodeCache from 'node-cache';
-import apm from 'elastic-apm-node';
-import { iCacheService } from './interfaces/iCacheService';
 import cluster from 'cluster';
+import apm from 'elastic-apm-node';
+import { Context } from 'koa';
 import os from 'os';
-import { ArangoDBService } from './clients/arango.client';
+import App from './app';
+import { config } from './config';
+import { iCacheService } from './interfaces/iCacheService';
+import { Services } from './services';
+import { LoggerService } from './services/logger.service';
 
 apm.start({
   serviceName: config.functionName,
@@ -15,23 +14,39 @@ apm.start({
   serverUrl: config.apmURL,
   usePathAsTransactionName: true,
   active: config.apmLogging,
-  transactionIgnoreUrls: [
-    '/health'
-  ],
+  transactionIgnoreUrls: ['/health'],
 });
 
-export const cache = new NodeCache();
-export const dbService = new ArangoDBService();
-export const cacheService: iCacheService = new RedisClientService();
+export const cache = Services.getCacheInstance();
+export const dbService = Services.getDatabaseInstance();
+export const cacheService: iCacheService = Services.getCacheClientInstance();
 
-export const runServer = async (): Promise<void> => {
+let app: App;
+
+export const runServer = (): App => {
   /**
    * KOA Rest Server
    */
-  const app = new App();
-  app.listen(config.restPort, () => {
+  const koaApp = new App();
+  koaApp.listen(config.restPort, () => {
     LoggerService.log(`API restServer listening on PORT ${config.restPort}`);
   });
+
+  function handleError(err: Error, ctx: Context): void {
+    if (ctx == null) {
+      LoggerService.error(err, undefined, 'Unhandled exception occured');
+    }
+  }
+
+  function terminate(signal: NodeJS.Signals): void {
+    try {
+      koaApp.terminate();
+    } finally {
+      LoggerService.log('App is terminated');
+      process.kill(process.pid, signal);
+    }
+  }
+  return koaApp;
 };
 
 process.on('uncaughtException', (err) => {
@@ -60,9 +75,11 @@ if (cluster.isMaster && config.maxCPU !== 1) {
   // Workers can share any TCP connection
   // In this case it is an HTTP server
   try {
-    runServer();
+    app = runServer();
   } catch (err) {
     LoggerService.error(`Error while starting HTTP server on Worker ${process.pid}`, err);
   }
   console.log(`Worker ${process.pid} started`);
 }
+
+export { app };
