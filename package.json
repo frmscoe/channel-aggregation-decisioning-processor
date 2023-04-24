@@ -32,7 +32,7 @@
     "axios": "^0.21.2",
     "copyfiles": "^2.4.1",
     "dotenv": "^8.2.0",
-    "elastic-apm-node": "^3.14.0",
+    "elastic-apm-node": "^3.44.1",
     "koa": "2.13.1",
     "koa-bodyparser": "4.3.0",
     "koa-router": "10.0.0",
@@ -44,7 +44,6 @@
   },
   "devDependencies": {
     "@types/async": "^3.2.5",
-    "@types/elastic-apm-node": "^2.7.0",
     "@types/jest": "^26.0.20",
     "@types/koa": "2.13.1",
     "@types/koa-bodyparser": "4.3.0",
