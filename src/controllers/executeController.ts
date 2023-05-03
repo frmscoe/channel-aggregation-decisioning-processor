@@ -1,17 +1,15 @@
 import { Context, Next } from 'koa';
-import { IPain001Message } from '../interfaces/iPain001';
 import { NetworkMap } from '../classes/network-map';
-import { RuleResult } from '../classes/rule-result';
 import { TypologyResult } from '../classes/typology-result';
 import { handleTransaction } from '../services/logic.service';
+import { Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 
 export const execute = async (ctx: Context, next: Next): Promise<void | Context> => {
-  const reqBody = ctx.request.body as Record<string, unknown>;
-  const req = reqBody.transaction;
-  const networkMap = reqBody.networkMap as NetworkMap;
-  const typologyResult = reqBody.typologyResult as TypologyResult;
+  const transaction = ctx.request.body.transaction as Pacs002;
+  const networkMap = ctx.request.body.networkMap as NetworkMap;
+  const typologyResult = ctx.request.body.typologyResult as TypologyResult;
 
-  const result = await handleTransaction(req, networkMap, typologyResult);
+  const result = await handleTransaction(transaction, networkMap, typologyResult);
 
   ctx.body = result;
   ctx.status = 200;

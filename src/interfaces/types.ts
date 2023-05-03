@@ -1,19 +1,19 @@
-import { IPain001Message } from '../interfaces/iPain001';
 import { NetworkMap } from '../classes/network-map';
-import { RuleResult } from '../classes/rule-result';
-import { TypologyResult } from '../classes/typology-result';
 import { ChannelResult } from '../classes/channel-result';
+import { Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 
 export type TadpReqBody = {
-  transaction: IPain001Message;
+  transaction: Pacs002;
   networkMap: NetworkMap;
   channelResult: ChannelResult;
 };
+
 export type Result = {
   msg: string | undefined;
   result: string;
   tadpReqBody: TadpReqBody | undefined;
 };
+
 export type ExecRequest = {
   result: string | undefined;
   tadpReqBody: TadpReqBody | undefined;
