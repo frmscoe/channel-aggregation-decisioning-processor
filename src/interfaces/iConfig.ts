@@ -18,4 +18,10 @@ export interface IConfig {
   dbUser: string;
   dbPassword: string;
   collectionName: string;
+  redis: {
+    auth: string;
+    db: number;
+    host: string;
+    port: number;
+  };
 }

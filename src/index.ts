@@ -7,6 +7,7 @@ import { config } from './config';
 import { iCacheService } from './interfaces/iCacheService';
 import { Services } from './services';
 import { LoggerService } from './services/logger.service';
+import { CreateDatabaseManager, DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
 
 apm.start({
   serviceName: config.functionName,
@@ -22,6 +23,22 @@ export const dbService = Services.getDatabaseInstance();
 export const cacheService: iCacheService = Services.getCacheClientInstance();
 
 let app: App;
+
+const databaseManagerConfig = {
+  redisConfig: {
+    db: config.redis.db,
+    host: config.redis.host,
+    password: config.redis.auth,
+    port: config.redis.port,
+  },
+};
+
+let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;
+
+export const init = async () => {
+  const manager = await CreateDatabaseManager(databaseManagerConfig);
+  databaseManager = manager;
+};
 
 export const runServer = (): App => {
   /**
@@ -59,6 +76,11 @@ process.on('unhandledRejection', (err) => {
 
 const numCPUs = os.cpus().length > config.maxCPU ? config.maxCPU + 1 : os.cpus().length + 1;
 
+if (process.env.NODE_ENV !== 'test') {
+  // setup lib - create database instance
+  init();
+}
+
 if (cluster.isMaster && config.maxCPU !== 1) {
   console.log(`Primary ${process.pid} is running`);
 
@@ -82,4 +104,5 @@ if (cluster.isMaster && config.maxCPU !== 1) {
   console.log(`Worker ${process.pid} started`);
 }
 
+export { databaseManager };
 export { app };

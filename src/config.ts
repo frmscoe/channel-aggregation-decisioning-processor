@@ -27,4 +27,10 @@ export const config: IConfig = {
   dbUser: <string>process.env.DB_USER,
   dbPassword: <string>process.env.DB_PASSWORD,
   collectionName: <string>process.env.COLLECTION_NAME,
+  redis: {
+    auth: <string>process.env.REDIS_AUTH,
+    db: parseInt(process.env.REDIS_DB!, 10) || 0,
+    host: <string>process.env.REDIS_HOST,
+    port: parseInt(process.env.REDIS_PORT!, 10),
+  },
 };
