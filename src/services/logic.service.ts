@@ -21,19 +21,19 @@ const executeRequest = async (
     const cacheKey = `CADP_${transactionID}_${channel.id}_${channel.cfg}`;
     const jtypologyResults = await cacheService.addOneGetAll(cacheKey, JSON.stringify(typologyResult));
     const typologyResults: TypologyResult[] = [];
-    if (jtypologyResults && jtypologyResults.length > 0) Object.assign(typologyResults, JSON.parse(jtypologyResults[0]));
-
-    if (!channel.typologies.some((t) => t.id === typologyResult.id && t.cfg === typologyResult.cfg))
+    if (jtypologyResults && jtypologyResults.length > 0) {
+      for (const jtypologyResult of jtypologyResults) {
+        const typoRes: TypologyResult = new TypologyResult();
+        Object.assign(typoRes, JSON.parse(jtypologyResult));
+        typologyResults.push(typoRes);
+      }
+    }
+    else
       return {
-        result: 'Incomplete',
-        tadpReqBody: undefined,
-      } as ExecRequest;
-
-    if (typologyResults.some((t) => t.id === typologyResult.id && t.cfg === typologyResult.cfg))
-      return {
-        result: 'Incomplete',
+        result: 'Error',
         tadpReqBody: undefined,
       };
+
 
     // check if all results for this Channel is found
     if (typologyResults.length < channel.typologies.length) {
@@ -60,6 +60,10 @@ const executeRequest = async (
       await executePost(config.tadpEndpoint, tadpReqBody);
     } catch (error) {
       LoggerService.error('Error while sending Channel result to TADP', error as Error, 'executeRequest');
+      // return {
+      //   result: 'Error',
+      //   tadpReqBody: undefined,
+      // };
     }
     span = apm.startSpan(`[${transactionID}] Delete Typology interim cache key`);
     await databaseManager.deleteKey(cacheKey);
@@ -88,7 +92,7 @@ export const handleTransaction = async (
   const toReturn = [];
   const tadProc = [];
   let channelRes;
-  for (const channel of networkMap.messages[0].channels) {
+  for (const channel of networkMap.messages[0].channels.filter(c => c.typologies.some(t => t.id === typologyResult.id && t.cfg === typologyResult.cfg))) {
     channelCounter++;
     LoggerService.log(`Channel[${channelCounter}] executing request`);
     channelRes = await executeRequest(transaction, channel, networkMap, typologyResult);

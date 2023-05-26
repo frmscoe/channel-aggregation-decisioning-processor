@@ -55,15 +55,23 @@ export class RedisClientService implements iCacheService {
         .smembers(key)
         .exec((err, res) => {
           // smembers result
-          if (res && res[1] && res[1][1]) {
-            resolve(res[1][1] as string[]);
+          if (res && res[1]) {
+            if (res[1][0]){
+              resolve(res[1] as string[]);
+              return true;
+            }
+
+            resolve(res[1] as string[]);
+            return true;
           }
 
           if (err) {
             LoggerService.error('Error while executing transaction on redis with message:', err, 'RedisService');
+            return false;
           }
 
           resolve(null);
+          return false;
         });
     });
 
