@@ -22,6 +22,7 @@ COPY ./package.json ./
 COPY ./package-lock.json ./
 COPY ./tsconfig.json ./
 COPY ./global.d.ts ./
+COPY ./.npmrc ./.npmrc
 
 # Install dependencies
 # RUN yarn run cleanup
