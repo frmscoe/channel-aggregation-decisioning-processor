@@ -4,10 +4,11 @@ import { Context } from 'koa';
 import os from 'os';
 import App from './app';
 import { config } from './config';
-import { iCacheService } from './interfaces/iCacheService';
 import { Services } from './services';
 import { LoggerService } from './services/logger.service';
 import { CreateDatabaseManager, DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
+import NodeCache from 'node-cache';
+import { iCacheService } from './interfaces/iCacheService';
 
 apm.start({
   serviceName: config.functionName,
@@ -18,8 +19,7 @@ apm.start({
   transactionIgnoreUrls: ['/health'],
 });
 
-export const cache = Services.getCacheInstance();
-export const dbService = Services.getDatabaseInstance();
+let cache: NodeCache;
 export const cacheService: iCacheService = Services.getCacheClientInstance();
 
 let app: App;
@@ -36,11 +36,10 @@ const databaseManagerConfig = {
 let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;
 
 export const init = async () => {
-  const manager = await CreateDatabaseManager(databaseManagerConfig);
-  databaseManager = manager;
+  databaseManager = await CreateDatabaseManager(databaseManagerConfig);
 };
 
-export const runServer = (): App => {
+const runServer = (): App => {
   /**
    * KOA Rest Server
    */
@@ -76,10 +75,17 @@ process.on('unhandledRejection', (err) => {
 
 const numCPUs = os.cpus().length > config.maxCPU ? config.maxCPU + 1 : os.cpus().length + 1;
 
-if (process.env.NODE_ENV !== 'test') {
-  // setup lib - create database instance
-  init();
-}
+(async () => {
+  cache = Services.getCacheInstance();
+  try {
+    if (process.env.NODE_ENV !== 'test') {
+      // setup lib - create database instance
+      await init();
+    }
+  } catch (err) {
+    LoggerService.error('Error while starting HTTP server', err as Error);
+  }
+})();
 
 if (cluster.isMaster && config.maxCPU !== 1) {
   console.log(`Primary ${process.pid} is running`);
@@ -104,5 +110,4 @@ if (cluster.isMaster && config.maxCPU !== 1) {
   console.log(`Worker ${process.pid} started`);
 }
 
-export { databaseManager };
-export { app };
+export { app, databaseManager, cache };

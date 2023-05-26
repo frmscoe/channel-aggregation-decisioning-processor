@@ -6,7 +6,7 @@ import { ChannelResult } from '../classes/channel-result';
 import { Result, ExecRequest, TadpReqBody } from '../interfaces/types';
 import axios from 'axios';
 import apm from 'elastic-apm-node';
-import { cacheService } from '..';
+import { cacheService, databaseManager } from '..';
 import { Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 
 const executeRequest = async (
@@ -18,10 +18,10 @@ const executeRequest = async (
   let span;
   try {
     const transactionID = transaction.FIToFIPmtSts.GrpHdr.MsgId;
-    const cacheKey = `${transactionID}_${channel.id}_${channel.cfg}`;
-    const jtypologyResults = await cacheService.getJson(cacheKey);
+    const cacheKey = `CADP_${transactionID}_${channel.id}_${channel.cfg}`;
+    const jtypologyResults = await cacheService.addOneGetAll(cacheKey, JSON.stringify(typologyResult));
     const typologyResults: TypologyResult[] = [];
-    if (jtypologyResults && jtypologyResults.length > 0) Object.assign(typologyResults, JSON.parse(jtypologyResults));
+    if (jtypologyResults && jtypologyResults.length > 0) Object.assign(typologyResults, JSON.parse(jtypologyResults[0]));
 
     if (!channel.typologies.some((t) => t.id === typologyResult.id && t.cfg === typologyResult.cfg))
       return {
@@ -35,17 +35,8 @@ const executeRequest = async (
         tadpReqBody: undefined,
       };
 
-    typologyResults.push({
-      id: typologyResult.id,
-      cfg: typologyResult.cfg,
-      result: typologyResult.result,
-      ruleResults: typologyResult.ruleResults,
-    });
     // check if all results for this Channel is found
     if (typologyResults.length < channel.typologies.length) {
-      span = apm.startSpan(`[${transactionID}] Save Channel interim rule results to Cache`);
-      await cacheService.setJson(cacheKey, JSON.stringify(typologyResults));
-      span?.end();
       return {
         result: 'Incomplete',
         tadpReqBody: undefined,
@@ -66,15 +57,12 @@ const executeRequest = async (
       channelResult: channelResult,
     };
     try {
-      span = apm.startSpan(`[${transactionID}] Send Channel result to TADP`);
       await executePost(config.tadpEndpoint, tadpReqBody);
-      span?.end();
     } catch (error) {
-      span?.end();
       LoggerService.error('Error while sending Channel result to TADP', error as Error, 'executeRequest');
     }
     span = apm.startSpan(`[${transactionID}] Delete Typology interim cache key`);
-    await cacheService.deleteKey(cacheKey);
+    await databaseManager.deleteKey(cacheKey);
     span?.end();
     return {
       result: 'Complete',

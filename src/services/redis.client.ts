@@ -46,4 +46,25 @@ export class RedisClientService implements iCacheService {
         resolve(res);
       });
     });
+
+  addOneGetAll = (key: string, value: string): Promise<string[] | null> =>
+    new Promise((resolve) => {
+      this.redisClient
+        .multi()
+        .sadd(key, value)
+        .smembers(key)
+        .exec((err, res) => {
+          // smembers result
+          if (res && res[1] && res[1][1]) {
+            resolve(res[1][1] as string[]);
+          }
+
+          if (err) {
+            LoggerService.error('Error while executing transaction on redis with message:', err, 'RedisService');
+          }
+
+          resolve(null);
+        });
+    });
+
 }

@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 import apm from 'elastic-apm-node';
-import { app, cache, cacheService, dbService } from '../../src';
+import { app, cache, databaseManager, init } from '../../src';
 import { NetworkMap } from '../../src/classes/network-map';
 import { RuleResult } from '../../src/classes/rule-result';
 import { TypologyResult } from '../../src/classes/typology-result';
@@ -49,10 +49,13 @@ const getMockNetworkMapWithMultipleChannels = () => {
 
 afterAll(async (done) => {
   cache.close();
-  cacheService.redisClient.quit();
-  dbService.client.close();
+  databaseManager.quit();
   app.terminate();
   done();
+});
+
+beforeAll(async ()=>{
+  await init();
 });
 
 describe('Logic Service', () => {
@@ -67,15 +70,15 @@ describe('Logic Service', () => {
       });
     });
 
-    getJsonSpy = jest.spyOn(cacheService, 'getJson').mockImplementation((key: string): Promise<string> => {
-      return new Promise<string>((resolve, reject) => resolve('{}'));
+    getJsonSpy = jest.spyOn(databaseManager, 'getJson').mockImplementation((key: string): Promise<string[]> => {
+      return new Promise<string[]>((resolve, reject) => resolve(['[]']));
     });
 
-    setJsonSpy = jest.spyOn(cacheService, 'setJson').mockImplementation((key: string): Promise<string> => {
-      return new Promise<string>((resolve, reject) => resolve(''));
+    setJsonSpy = jest.spyOn(databaseManager, 'setJson').mockImplementation((key: string): Promise<"OK" | undefined> => {
+      return new Promise<"OK" | undefined>((resolve, reject) => resolve('OK'));
     });
 
-    deleteJsonSpy = jest.spyOn(cacheService, 'deleteKey').mockImplementation((key: string): Promise<number> => {
+    deleteJsonSpy = jest.spyOn(databaseManager, 'deleteKey').mockImplementation((key: string): Promise<number> => {
       return new Promise<number>((resolve, reject) => resolve(0));
     });
   });
@@ -114,10 +117,10 @@ describe('Logic Service', () => {
     it('should handle successful request, have existing typology results already', async () => {
       const expectedReq = getMockTransaction();
 
-      getJsonSpy = jest.spyOn(cacheService, 'getJson').mockImplementation((key: string): Promise<string> => {
-        return new Promise<string>((resolve, reject) =>
+      getJsonSpy = jest.spyOn(databaseManager, 'getJson').mockImplementation((key: string): Promise<string[]> => {
+        return new Promise<string[]>((resolve, reject) =>
           resolve(
-            '[{"id":"028@1.0","cfg":"028@1.0","result":50,"ruleResults":[{"result":true,"id":"","cfg":"","subRuleRef":"","reason":""}]}]',
+            ['[{"id":"028@1.0","cfg":"028@1.0","result":50,"ruleResults":[{"result":true,"id":"","cfg":"","subRuleRef":"","reason":""}]}]'],
           ),
         );
       });
@@ -165,7 +168,7 @@ describe('Logic Service', () => {
     });
 
     it('should handle successful request, cacheService error', async () => {
-      getJsonSpy = jest.spyOn(cacheService, 'getJson').mockRejectedValue((key: string): Promise<string> => {
+      getJsonSpy = jest.spyOn(databaseManager, 'getJson').mockRejectedValue((key: string): Promise<string> => {
         return new Promise((resolve, reject) => {
           resolve('');
         });
@@ -188,8 +191,8 @@ describe('Logic Service', () => {
     it('should handle successful request, not all results yet', async () => {
       const expectedReq = getMockTransaction();
 
-      getJsonSpy = jest.spyOn(cacheService, 'getJson').mockImplementation((key: string): Promise<string> => {
-        return new Promise<string>((resolve, reject) => resolve('[]'));
+      getJsonSpy = jest.spyOn(databaseManager, 'getJson').mockImplementation((key: string): Promise<string[]> => {
+        return new Promise<string[]>((resolve, reject) => resolve([]));
       });
 
       const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
