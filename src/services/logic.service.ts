@@ -1,13 +1,13 @@
-import { config } from '../config';
-import { LoggerService } from './logger.service';
-import { Channel, NetworkMap } from '../classes/network-map';
-import { TypologyResult } from '../classes/typology-result';
-import { ChannelResult } from '../classes/channel-result';
-import { Result, ExecRequest, TadpReqBody } from '../interfaces/types';
+import { Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 import axios from 'axios';
 import apm from 'elastic-apm-node';
-import { cacheService, databaseManager } from '..';
-import { Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
+import { cacheService } from '..';
+import { ChannelResult } from '../classes/channel-result';
+import { Channel, NetworkMap } from '../classes/network-map';
+import { TypologyResult } from '../classes/typology-result';
+import { config } from '../config';
+import { ExecRequest, Result, TadpReqBody } from '../interfaces/types';
+import { LoggerService } from './logger.service';
 
 const executeRequest = async (
   transaction: Pacs002,
@@ -66,7 +66,7 @@ const executeRequest = async (
       // };
     }
     span = apm.startSpan(`[${transactionID}] Delete Typology interim cache key`);
-    await databaseManager.deleteKey(cacheKey);
+    await cacheService.deleteKey(cacheKey);
     span?.end();
     return {
       result: 'Complete',
