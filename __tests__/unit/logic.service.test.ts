@@ -3,11 +3,9 @@
 import axios from 'axios';
 import apm from 'elastic-apm-node';
 import { app, cache, cacheService, databaseManager, init } from '../../src';
-import { NetworkMap } from '../../src/classes/network-map';
-import { RuleResult } from '../../src/classes/rule-result';
 import { TypologyResult } from '../../src/classes/typology-result';
 import { handleTransaction } from '../../src/services/logic.service';
-import { Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
+import { NetworkMap, Pacs002, RuleResult } from '@frmscoe/frms-coe-lib/lib/interfaces';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -47,11 +45,8 @@ const getMockNetworkMapWithMultipleChannels = () => {
   return networkMap;
 };
 
-afterAll(async (done) => {
-  cache.close();
-  databaseManager.quit();
-  app.terminate();
-  done();
+afterAll(async () => {
+  
 });
 
 beforeAll(async () => {
@@ -59,27 +54,33 @@ beforeAll(async () => {
 });
 
 describe('Logic Service', () => {
-  let postSpy: jest.SpyInstance;
-  let getJsonSpy: jest.SpyInstance;
-  let setJsonSpy: jest.SpyInstance;
-  let deleteJsonSpy: jest.SpyInstance;
   beforeEach(() => {
-    postSpy = jest.spyOn(axios, 'post').mockImplementation(async (url: string, data?: any) => {
+    jest.spyOn(axios, 'post').mockImplementation(async (url: string, data?: any) => {
       return new Promise((resolve, reject) => {
         resolve({ status: 200 });
       });
     });
 
-    getJsonSpy = jest.spyOn(databaseManager, 'getJson').mockImplementation((key: string): Promise<string[]> => {
-      return new Promise<string[]>((resolve, reject) => resolve(['[]']));
+    jest.spyOn(databaseManager, 'getJson').mockImplementation((key: string): Promise<string> => {
+      return new Promise<string>((resolve, reject) => resolve('[]'));
     });
 
-    setJsonSpy = jest.spyOn(databaseManager, 'setJson').mockImplementation((key: string): Promise<"OK" | undefined> => {
-      return new Promise<"OK" | undefined>((resolve, reject) => resolve('OK'));
+    jest.spyOn(databaseManager, 'setJson').mockImplementation((key: string): Promise<'OK' | undefined> => {
+      return new Promise<'OK' | undefined>((resolve, reject) => resolve('OK'));
     });
 
-    deleteJsonSpy = jest.spyOn(databaseManager, 'deleteKey').mockImplementation((key: string): Promise<number> => {
+    jest.spyOn(databaseManager, 'deleteKey').mockImplementation((key: string): Promise<number> => {
       return new Promise<number>((resolve, reject) => resolve(0));
+    });
+
+    jest.spyOn(cacheService, 'deleteKey').mockImplementation((key: string): Promise<number> => {
+      return new Promise<number>((resolve, reject) => resolve(0));
+    });
+    const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
+    jest.spyOn(cacheService, 'addOneGetAll').mockImplementation((key: string, value: string): Promise<string[] | null> => {
+      return new Promise<string[]>((resolve, reject) =>
+        resolve([JSON.stringify({ result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults })]),
+      );
     });
   });
 
@@ -87,7 +88,7 @@ describe('Logic Service', () => {
     it('should handle successful request, with an unmatched number', async () => {
       const expectedReq = getMockTransaction();
 
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
 
       const networkMap = getMockNetworkMapWithMultipleChannels();
       const typologyResult: TypologyResult = { result: 50, id: '030@1.0', cfg: '030@1.0', desc: 'test', threshold: 0, ruleResults };
@@ -102,7 +103,7 @@ describe('Logic Service', () => {
     it('should handle successful request, with a matched number', async () => {
       const expectedReq = getMockTransaction();
 
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
       const networkMap = getMockNetworkMap();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
@@ -117,15 +118,15 @@ describe('Logic Service', () => {
     it('should handle successful request, have existing typology results already', async () => {
       const expectedReq = getMockTransaction();
 
-      getJsonSpy = jest.spyOn(databaseManager, 'getJson').mockImplementation((key: string): Promise<string[]> => {
-        return new Promise<string[]>((resolve, reject) =>
+      jest.spyOn(databaseManager, 'getJson').mockImplementation((key: string): Promise<string> => {
+        return new Promise<string>((resolve, reject) =>
           resolve(
-            ['[{"id":"028@1.0","cfg":"028@1.0","result":50,"ruleResults":[{"result":true,"id":"","cfg":"","subRuleRef":"","reason":""}]}]'],
+            '[{"id":"028@1.0","cfg":"028@1.0","result":50,"ruleResults":[{"result":true,"id":"","cfg":"","subRuleRef":"","reason":""}]}]',
           ),
         );
       });
 
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
       const networkMap = getMockNetworkMapWithMultipleChannels();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
@@ -140,7 +141,7 @@ describe('Logic Service', () => {
     it('should handle successful request, wrong axios post code', async () => {
       const expectedReq = getMockTransaction();
 
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
       const networkMap = getMockNetworkMap();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
@@ -155,7 +156,7 @@ describe('Logic Service', () => {
     it('should handle successful request, axios post error', async () => {
       const expectedReq = getMockTransaction();
 
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
       const networkMap = getMockNetworkMap();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
@@ -168,7 +169,7 @@ describe('Logic Service', () => {
     });
 
     it('should handle successful request, cacheService error', async () => {
-      getJsonSpy = jest.spyOn(cacheService, 'addOneGetAll').mockRejectedValue((key: string, value: string): Promise<string[] | null> => {
+      jest.spyOn(cacheService, 'addOneGetAll').mockRejectedValue((key: string, value: string): Promise<string[] | null> => {
         return new Promise((resolve, reject) => {
           resolve(null);
         });
@@ -176,7 +177,7 @@ describe('Logic Service', () => {
 
       const expectedReq = getMockTransaction();
 
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
       const networkMap = getMockNetworkMap();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
@@ -190,11 +191,7 @@ describe('Logic Service', () => {
 
     it('should handle successful request, not all results yet', async () => {
       const expectedReq = getMockTransaction();
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
-
-      getJsonSpy = jest.spyOn(cacheService, 'addOneGetAll').mockImplementation((key: string, value: string): Promise<string[] | null> => {
-        return new Promise<string[]>((resolve, reject) => resolve([JSON.stringify({ result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults })]));
-      });
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
 
       const networkMap = getMockNetworkMapWithMultipleChannels();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
@@ -209,9 +206,9 @@ describe('Logic Service', () => {
 
     it('should respond with error if nothing comes back from cache', async () => {
       const expectedReq = getMockTransaction();
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
 
-      getJsonSpy = jest.spyOn(cacheService, 'addOneGetAll').mockImplementation((key: string, value: string): Promise<string[] | null> => {
+      jest.spyOn(cacheService, 'addOneGetAll').mockImplementation((key: string, value: string): Promise<string[] | null> => {
         return new Promise<string[] | null>((resolve, reject) => resolve(null));
       });
 

@@ -25,10 +25,7 @@ COPY ./global.d.ts ./
 COPY ./.npmrc ./.npmrc
 
 # Install dependencies
-# RUN yarn run cleanup
-
-# Install dependencies
-RUN npm install
+RUN ci install
 
 COPY ./src ./src
 

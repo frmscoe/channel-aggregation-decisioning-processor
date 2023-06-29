@@ -1,6 +1,5 @@
-import { NetworkMap } from '../classes/network-map';
 import { ChannelResult } from '../classes/channel-result';
-import { Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
+import { NetworkMap, Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 
 export type TadpReqBody = {
   transaction: Pacs002;

@@ -1,8 +1,7 @@
 import { Context, Next } from 'koa';
-import { NetworkMap } from '../classes/network-map';
 import { TypologyResult } from '../classes/typology-result';
 import { handleTransaction } from '../services/logic.service';
-import { Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
+import { NetworkMap, Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 
 export const execute = async (ctx: Context, next: Next): Promise<void | Context> => {
   const transaction = ctx.request.body.transaction as Pacs002;

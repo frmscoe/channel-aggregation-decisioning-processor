@@ -56,7 +56,7 @@ export class RedisClientService implements iCacheService {
         .exec((err, res) => {
           // smembers result
           if (res && res[1]) {
-            if (res[1][0]){
+            if (res[1][0]) {
               resolve(res[1] as string[]);
               return true;
             }
@@ -74,5 +74,4 @@ export class RedisClientService implements iCacheService {
           return false;
         });
     });
-
 }

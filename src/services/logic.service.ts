@@ -1,9 +1,8 @@
-import { Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
+import { Channel, NetworkMap, Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 import axios from 'axios';
 import apm from 'elastic-apm-node';
 import { cacheService } from '..';
 import { ChannelResult } from '../classes/channel-result';
-import { Channel, NetworkMap } from '../classes/network-map';
 import { TypologyResult } from '../classes/typology-result';
 import { config } from '../config';
 import { ExecRequest, Result, TadpReqBody } from '../interfaces/types';
@@ -27,13 +26,11 @@ const executeRequest = async (
         Object.assign(typoRes, JSON.parse(jtypologyResult));
         typologyResults.push(typoRes);
       }
-    }
-    else
+    } else
       return {
         result: 'Error',
         tadpReqBody: undefined,
       };
-
 
     // check if all results for this Channel is found
     if (typologyResults.length < channel.typologies.length) {
@@ -92,7 +89,9 @@ export const handleTransaction = async (
   const toReturn = [];
   const tadProc = [];
   let channelRes;
-  for (const channel of networkMap.messages[0].channels.filter(c => c.typologies.some(t => t.id === typologyResult.id && t.cfg === typologyResult.cfg))) {
+  for (const channel of networkMap.messages[0].channels.filter((c) =>
+    c.typologies.some((t) => t.id === typologyResult.id && t.cfg === typologyResult.cfg),
+  )) {
     channelCounter++;
     LoggerService.log(`Channel[${channelCounter}] executing request`);
     channelRes = await executeRequest(transaction, channel, networkMap, typologyResult);
