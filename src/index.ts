@@ -1,14 +1,14 @@
+import { CreateDatabaseManager, DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
+import { init } from '@frmscoe/frms-coe-startup-lib';
 import cluster from 'cluster';
 import apm from 'elastic-apm-node';
-import { Context } from 'koa';
+import NodeCache from 'node-cache';
 import os from 'os';
-import App from './app';
 import { config } from './config';
+import { iCacheService } from './interfaces/iCacheService';
 import { Services } from './services';
 import { LoggerService } from './services/logger.service';
-import { CreateDatabaseManager, DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
-import NodeCache from 'node-cache';
-import { iCacheService } from './interfaces/iCacheService';
+import { handleTransaction } from './services/logic.service';
 
 apm.start({
   serviceName: config.functionName,
@@ -22,8 +22,6 @@ apm.start({
 let cache: NodeCache;
 export const cacheService: iCacheService = Services.getCacheClientInstance();
 
-let app: App;
-
 const databaseManagerConfig = {
   redisConfig: {
     db: config.redis.db,
@@ -35,34 +33,21 @@ const databaseManagerConfig = {
 
 let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;
 
-export const init = async () => {
+export const dbInit = async () => {
   databaseManager = await CreateDatabaseManager(databaseManagerConfig);
 };
-
-const runServer = (): App => {
-  /**
-   * KOA Rest Server
-   */
-  const koaApp = new App();
-  koaApp.listen(config.restPort, () => {
-    LoggerService.log(`API restServer listening on PORT ${config.restPort}`);
-  });
-
-  function handleError(err: Error, ctx: Context): void {
-    if (ctx == null) {
-      LoggerService.error(err, undefined, 'Unhandled exception occured');
+//handleTransaction
+export const runServer = async () => {
+  dbInit();
+  for (let retryCount = 0; retryCount < 10; retryCount++) {
+    console.log('Connecting to nats server...');
+    if (!(await init(handleTransaction))) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    } else {
+      console.log('Connected to nats');
+      break;
     }
   }
-
-  function terminate(signal: NodeJS.Signals): void {
-    try {
-      koaApp.terminate();
-    } finally {
-      LoggerService.log('App is terminated');
-      process.kill(process.pid, signal);
-    }
-  }
-  return koaApp;
 };
 
 process.on('uncaughtException', (err) => {
@@ -80,7 +65,7 @@ const numCPUs = os.cpus().length > config.maxCPU ? config.maxCPU + 1 : os.cpus()
   try {
     if (process.env.NODE_ENV !== 'test') {
       // setup lib - create database instance
-      await init();
+      await dbInit();
     }
   } catch (err) {
     LoggerService.error('Error while starting HTTP server', err as Error);
@@ -103,11 +88,12 @@ if (cluster.isMaster && config.maxCPU !== 1) {
   // Workers can share any TCP connection
   // In this case it is an HTTP server
   try {
-    app = runServer();
+     runServer();
   } catch (err) {
     LoggerService.error(`Error while starting HTTP server on Worker ${process.pid}`, err);
   }
   console.log(`Worker ${process.pid} started`);
 }
 
-export { app, databaseManager, cache };
+export { cache, databaseManager };
+
