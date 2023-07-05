@@ -1,14 +1,10 @@
 /* eslint-disable */
-
-import axios from 'axios';
+import * as startUpLib from '@frmscoe/frms-coe-startup-lib';
 import apm from 'elastic-apm-node';
-import { app, cache, cacheService, databaseManager, init } from '../../src';
+import { cacheService, databaseManager, dbInit } from '../../src';
 import { TypologyResult } from '../../src/classes/typology-result';
 import { handleTransaction } from '../../src/services/logic.service';
 import { NetworkMap, Pacs002, RuleResult } from '@frmscoe/frms-coe-lib/lib/interfaces';
-
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 jest.mock('elastic-apm-node');
 const mockApm = apm as jest.Mocked<typeof apm>;
@@ -50,16 +46,13 @@ afterAll(async () => {
 });
 
 beforeAll(async () => {
-  await init();
+  await dbInit();
 });
 
 describe('Logic Service', () => {
+  let responseSpy: jest.SpyInstance;
   beforeEach(() => {
-    jest.spyOn(axios, 'post').mockImplementation(async (url: string, data?: any) => {
-      return new Promise((resolve, reject) => {
-        resolve({ status: 200 });
-      });
-    });
+    responseSpy = jest.spyOn(startUpLib, 'handleResponse').mockImplementation(jest.fn());
 
     jest.spyOn(databaseManager, 'getJson').mockImplementation((key: string): Promise<string> => {
       return new Promise<string>((resolve, reject) => resolve('[]'));
@@ -93,11 +86,13 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMapWithMultipleChannels();
       const typologyResult: TypologyResult = { result: 50, id: '030@1.0', cfg: '030@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      mockedAxios.post.mockResolvedValue({ status: 200 });
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult
+      });
 
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`1 channels initiated for transaction ID: ${expectedReq.FIToFIPmtSts.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 002@1.0, "Result":Incomplete}');
+      expect(responseSpy).toHaveBeenCalledTimes(0);
     });
 
     it('should handle successful request, with a matched number', async () => {
@@ -107,12 +102,13 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMap();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      mockedAxios.post.mockResolvedValue({ status: 200 });
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult
+      });
 
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`1 channels initiated for transaction ID: ${expectedReq.FIToFIPmtSts.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Complete}');
-      expect(result.tadpReqBody).toBeDefined();
+      expect(responseSpy).toHaveBeenCalled();
     });
 
     it('should handle successful request, have existing typology results already', async () => {
@@ -130,42 +126,13 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMapWithMultipleChannels();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      mockedAxios.post.mockResolvedValue({ status: 200 });
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult
+      });
 
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`1 channels initiated for transaction ID: ${expectedReq.FIToFIPmtSts.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Incomplete}');
-      expect(result.tadpReqBody).toBeUndefined();
-    });
-
-    it('should handle successful request, wrong axios post code', async () => {
-      const expectedReq = getMockTransaction();
-
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
-      const networkMap = getMockNetworkMap();
-      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
-
-      mockedAxios.post.mockResolvedValue({ status: 201 });
-
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`1 channels initiated for transaction ID: ${expectedReq.FIToFIPmtSts.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Complete}');
-      expect(result.tadpReqBody).toBeDefined();
-    });
-
-    it('should handle successful request, axios post error', async () => {
-      const expectedReq = getMockTransaction();
-
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
-      const networkMap = getMockNetworkMap();
-      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
-
-      mockedAxios.post.mockRejectedValue(new Error('Test Failure Path'));
-
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`1 channels initiated for transaction ID: ${expectedReq.FIToFIPmtSts.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Complete}');
-      expect(result.tadpReqBody).toBeDefined();
+      expect(responseSpy).toHaveBeenCalledTimes(0);
     });
 
     it('should handle successful request, cacheService error', async () => {
@@ -181,12 +148,13 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMap();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      mockedAxios.post.mockRejectedValue(new Error('Test Failure Path'));
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult
+      });
 
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`1 channels initiated for transaction ID: ${expectedReq.FIToFIPmtSts.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Error}');
-      expect(result.tadpReqBody).toBeUndefined();
+      expect(responseSpy).toHaveBeenCalledTimes(0);
     });
 
     it('should handle successful request, not all results yet', async () => {
@@ -196,12 +164,13 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMapWithMultipleChannels();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      mockedAxios.post.mockResolvedValue({ status: 200 });
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult
+      });
 
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`1 channels initiated for transaction ID: ${expectedReq.FIToFIPmtSts.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Incomplete}');
-      expect(result.tadpReqBody).toBeUndefined();
+      expect(responseSpy).toHaveBeenCalledTimes(0);
     });
 
     it('should respond with error if nothing comes back from cache', async () => {
@@ -215,12 +184,13 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMapWithMultipleChannels();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      mockedAxios.post.mockResolvedValue({ status: 200 });
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult
+      });
 
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`1 channels initiated for transaction ID: ${expectedReq.FIToFIPmtSts.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Error}');
-      expect(result.tadpReqBody).toBeUndefined();
+      expect(responseSpy).toHaveBeenCalledTimes(0);
     });
   });
 });
