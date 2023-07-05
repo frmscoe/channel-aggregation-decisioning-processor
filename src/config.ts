@@ -1,9 +1,9 @@
 import path from 'path';
-import { config as dotenv } from 'dotenv';
+import * as dotenv from 'dotenv';
 import { IConfig } from './interfaces/iConfig';
 
 // Load .env file into process.env if it exists. This is convenient for running locally.
-dotenv({
+dotenv.config({
   path: path.resolve(__dirname, '../.env'),
 });
 
