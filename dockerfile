@@ -25,7 +25,7 @@ COPY ./global.d.ts ./
 COPY ./.npmrc ./.npmrc
 
 # Install dependencies
-RUN ci install
+RUN npm install
 
 COPY ./src ./src
 
