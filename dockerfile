@@ -1,5 +1,5 @@
 FROM --platform=${TARGETPLATFORM:-linux/amd64} ghcr.io/openfaas/of-watchdog:0.8.4 as watchdog
-FROM --platform=${TARGETPLATFORM:-linux/amd64} node:16.17-alpine as ship
+FROM --platform=${TARGETPLATFORM:-linux/amd64} node:16.20-alpine as ship
 
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
@@ -22,9 +22,7 @@ COPY ./package.json ./
 COPY ./package-lock.json ./
 COPY ./tsconfig.json ./
 COPY ./global.d.ts ./
-
-# Install dependencies
-# RUN yarn run cleanup
+COPY ./.npmrc ./.npmrc
 
 # Install dependencies
 RUN npm install
@@ -62,6 +60,7 @@ ENV REDIS_PORT=6379
 ENV REDIS_DB=0
 ENV REDIS_AUTH=
 ENV TADP_ENDPOINT=
+ENV MAX_CPU=
 
 ENV prefix_logs="false"
 
