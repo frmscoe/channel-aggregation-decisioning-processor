@@ -15,6 +15,7 @@
     "lint": "npm lint:eslint && npm lint:prettier",
     "lint:eslint": "eslint \"**/*.ts\"",
     "lint:prettier": "prettier --check \"**/*.ts\"",
+    "prepare": "husky install",
     "test": "jest --config=jest.config.ts --passWithNoTests",
     "test:watch": "jest --config=jest.config.ts --watch"
   },
