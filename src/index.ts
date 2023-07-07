@@ -10,7 +10,7 @@ import { Services } from './services';
 import { LoggerService } from './services/logger.service';
 import { handleTransaction } from './services/logic.service';
 
-//if (config.apmLogging)
+// if (config.apmLogging)
 apm.start({
   serviceName: config.functionName,
   secretToken: config.apmSecretToken,
@@ -38,10 +38,10 @@ export let server: IStartupService;
 export const dbInit = async () => {
   databaseManager = await CreateDatabaseManager(databaseManagerConfig);
 };
-//handleTransaction
+// handleTransaction
 export const runServer = async () => {
   server = new StartupFactory();
-  if (config.nodeEnv == 'test') return;
+  if (config.nodeEnv === 'test') return;
   dbInit();
   for (let retryCount = 0; retryCount < 10; retryCount++) {
     console.log('Connecting to nats server...');
@@ -61,7 +61,6 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (err) => {
   LoggerService.error(`process on unhandledRejection error: ${err ?? '[NoMetaData]'}`);
 });
-
 
 (async () => {
   cache = Services.getCacheInstance();
@@ -102,4 +101,3 @@ if (cluster.isMaster && config.maxCPU !== 1) {
 }
 
 export { cache, databaseManager };
-

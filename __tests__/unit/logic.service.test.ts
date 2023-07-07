@@ -40,9 +40,7 @@ const getMockNetworkMapWithMultipleChannels = () => {
   return networkMap;
 };
 
-afterAll(async () => {
-  
-});
+afterAll(async () => {});
 
 beforeAll(async () => {
   await dbInit();
@@ -88,7 +86,7 @@ describe('Logic Service', () => {
       const result = await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
-        typologyResult: typologyResult
+        typologyResult: typologyResult,
       });
 
       expect(responseSpy).toHaveBeenCalledTimes(0);
@@ -104,7 +102,7 @@ describe('Logic Service', () => {
       const result = await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
-        typologyResult: typologyResult
+        typologyResult: typologyResult,
       });
 
       expect(responseSpy).toHaveBeenCalled();
@@ -128,7 +126,7 @@ describe('Logic Service', () => {
       const result = await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
-        typologyResult: typologyResult
+        typologyResult: typologyResult,
       });
 
       expect(responseSpy).toHaveBeenCalledTimes(0);
@@ -150,7 +148,7 @@ describe('Logic Service', () => {
       const result = await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
-        typologyResult: typologyResult
+        typologyResult: typologyResult,
       });
 
       expect(responseSpy).toHaveBeenCalledTimes(0);
@@ -166,7 +164,7 @@ describe('Logic Service', () => {
       const result = await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
-        typologyResult: typologyResult
+        typologyResult: typologyResult,
       });
 
       expect(responseSpy).toHaveBeenCalledTimes(0);
@@ -186,7 +184,7 @@ describe('Logic Service', () => {
       const result = await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
-        typologyResult: typologyResult
+        typologyResult: typologyResult,
       });
 
       expect(responseSpy).toHaveBeenCalledTimes(0);

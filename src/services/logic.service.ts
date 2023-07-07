@@ -73,8 +73,9 @@ const executeRequest = async (
   }
 };
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export const handleTransaction = async (transaction: any): Promise<void> => {
-  let pacs002 = transaction.transaction as Pacs002;
+  const pacs002 = transaction.transaction as Pacs002;
   const networkMap = transaction.networkMap as NetworkMap;
   const typologyResult = transaction.typologyResult as TypologyResult;
 

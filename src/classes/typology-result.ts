@@ -1,4 +1,4 @@
-import { RuleResult } from "@frmscoe/frms-coe-lib/lib/interfaces";
+import { RuleResult } from '@frmscoe/frms-coe-lib/lib/interfaces';
 
 export class TypologyResult {
   id = '';
