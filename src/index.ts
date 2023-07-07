@@ -92,7 +92,9 @@ if (cluster.isMaster && config.maxCPU !== 1) {
   // Workers can share any TCP connection
   // In this case it is an HTTP server
   try {
-    runServer();
+    async () => {
+      await runServer();
+    }
   } catch (err) {
     LoggerService.error(`Error while starting HTTP server on Worker ${process.pid}`, err);
   }
