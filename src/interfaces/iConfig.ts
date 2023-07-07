@@ -1,6 +1,6 @@
 export interface IConfig {
   maxCPU: number;
-  redisDB: string;
+  redisDB: number;
   redisAuth: string;
   redisHost: string;
   redisPort: number;

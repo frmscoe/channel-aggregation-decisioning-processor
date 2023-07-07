@@ -9,7 +9,7 @@ dotenv.config({
 
 export const config: IConfig = {
   maxCPU: parseInt(process.env.MAX_CPU!, 10) || 4,
-  redisDB: <string>process.env.REDIS_DB,
+  redisDB: parseInt(process.env.REDIS_DB!, 10) ?? 0,
   redisAuth: <string>process.env.REDIS_AUTH,
   redisHost: <string>process.env.REDIS_HOST,
   redisPort: parseInt(process.env.REDIS_PORT!, 10),
