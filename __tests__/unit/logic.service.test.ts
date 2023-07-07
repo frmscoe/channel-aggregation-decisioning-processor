@@ -1,7 +1,6 @@
 /* eslint-disable */
-import * as startUpLib from '@frmscoe/frms-coe-startup-lib';
 import apm from 'elastic-apm-node';
-import { cacheService, databaseManager, dbInit } from '../../src';
+import { cacheService, databaseManager, dbInit, server } from '../../src';
 import { TypologyResult } from '../../src/classes/typology-result';
 import { handleTransaction } from '../../src/services/logic.service';
 import { NetworkMap, Pacs002, RuleResult } from '@frmscoe/frms-coe-lib/lib/interfaces';
@@ -52,7 +51,7 @@ beforeAll(async () => {
 describe('Logic Service', () => {
   let responseSpy: jest.SpyInstance;
   beforeEach(() => {
-    responseSpy = jest.spyOn(startUpLib, 'handleResponse').mockImplementation(jest.fn());
+    responseSpy = jest.spyOn(server, 'handleResponse').mockImplementation(jest.fn());
 
     jest.spyOn(databaseManager, 'getJson').mockImplementation((key: string): Promise<string> => {
       return new Promise<string>((resolve, reject) => resolve('[]'));

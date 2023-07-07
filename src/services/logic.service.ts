@@ -1,7 +1,6 @@
 import { Channel, NetworkMap, Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
-import { handleResponse } from '@frmscoe/frms-coe-startup-lib';
 import apm from 'elastic-apm-node';
-import { cacheService } from '..';
+import { cacheService, server } from '..';
 import { ChannelResult } from '../classes/channel-result';
 import { TypologyResult } from '../classes/typology-result';
 import { ExecRequest, TadpReqBody } from '../interfaces/types';
@@ -53,7 +52,7 @@ const executeRequest = async (
       channelResult: channelResult,
     };
     try {
-      await handleResponse(JSON.stringify(tadpReqBody));
+      await server.handleResponse(tadpReqBody);
     } catch (error) {
       LoggerService.error('Error while sending Channel result to TADP', error as Error, 'executeRequest');
     }

@@ -1,5 +1,5 @@
 import { CreateDatabaseManager, DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
-import { init } from '@frmscoe/frms-coe-startup-lib';
+import { StartupFactory, IStartupService } from 'startup';
 import cluster from 'cluster';
 import apm from 'elastic-apm-node';
 import NodeCache from 'node-cache';
@@ -10,6 +10,7 @@ import { Services } from './services';
 import { LoggerService } from './services/logger.service';
 import { handleTransaction } from './services/logic.service';
 
+//if (config.apmLogging)
 apm.start({
   serviceName: config.functionName,
   secretToken: config.apmSecretToken,
@@ -32,16 +33,19 @@ const databaseManagerConfig = {
 };
 
 let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;
+export let server: IStartupService;
 
 export const dbInit = async () => {
   databaseManager = await CreateDatabaseManager(databaseManagerConfig);
 };
 //handleTransaction
 export const runServer = async () => {
+  server = new StartupFactory();
+  if (config.nodeEnv == 'test') return;
   dbInit();
   for (let retryCount = 0; retryCount < 10; retryCount++) {
     console.log('Connecting to nats server...');
-    if (!(await init(handleTransaction))) {
+    if (!(await server.init(handleTransaction))) {
       await new Promise((resolve) => setTimeout(resolve, 5000));
     } else {
       console.log('Connected to nats');
@@ -58,7 +62,6 @@ process.on('unhandledRejection', (err) => {
   LoggerService.error(`process on unhandledRejection error: ${err ?? '[NoMetaData]'}`);
 });
 
-const numCPUs = os.cpus().length > config.maxCPU ? config.maxCPU + 1 : os.cpus().length + 1;
 
 (async () => {
   cache = Services.getCacheInstance();
@@ -72,6 +75,7 @@ const numCPUs = os.cpus().length > config.maxCPU ? config.maxCPU + 1 : os.cpus()
   }
 })();
 
+const numCPUs = os.cpus().length > config.maxCPU ? config.maxCPU + 1 : os.cpus().length + 1;
 if (cluster.isMaster && config.maxCPU !== 1) {
   console.log(`Primary ${process.pid} is running`);
 
@@ -88,7 +92,7 @@ if (cluster.isMaster && config.maxCPU !== 1) {
   // Workers can share any TCP connection
   // In this case it is an HTTP server
   try {
-     runServer();
+    runServer();
   } catch (err) {
     LoggerService.error(`Error while starting HTTP server on Worker ${process.pid}`, err);
   }

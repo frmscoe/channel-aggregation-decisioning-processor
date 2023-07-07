@@ -15,7 +15,7 @@
     "lint": "npm lint:eslint && npm lint:prettier",
     "lint:eslint": "eslint \"**/*.ts\"",
     "lint:prettier": "prettier --check \"**/*.ts\"",
-    "test": "jest --config=jest.config.ts --passWithNoTests",
+    "test": "set STARTUP_TYPE=nats&&jest --config=jest.config.ts --passWithNoTests",
     "test:watch": "jest --config=jest.config.ts --watch"
   },
   "keywords": [],
@@ -30,7 +30,6 @@
   "license": "ISC",
   "dependencies": {
     "@frmscoe/frms-coe-lib": "^0.1.26",
-    "@frmscoe/frms-coe-startup-lib": "^0.0.7",
     "@log4js-node/logstash-http": "^1.1.0",
     "arangojs": "^7.5.0",
     "async": "^3.2.2",
@@ -45,6 +44,7 @@
     "node-cache": "^5.1.2",
     "redis": "^3.0.2",
     "shelljs": "^0.8.5",
+    "startup": "file:../frms-coe-startup-lib/lib",
     "swagger2-koa": "^4.0.0"
   },
   "devDependencies": {
