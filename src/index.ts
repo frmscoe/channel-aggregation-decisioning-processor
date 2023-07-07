@@ -1,5 +1,5 @@
 import { CreateDatabaseManager, DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
-import { StartupFactory, IStartupService } from 'startup';
+import { StartupFactory, IStartupService } from '@frmscoe/frms-coe-startup-lib';
 import cluster from 'cluster';
 import apm from 'elastic-apm-node';
 import NodeCache from 'node-cache';
@@ -91,13 +91,13 @@ if (cluster.isMaster && config.maxCPU !== 1) {
 } else {
   // Workers can share any TCP connection
   // In this case it is an HTTP server
-  try {
-    async () => {
+  (async () => {
+    try {
       await runServer();
+    } catch (err) {
+      LoggerService.error(`Error while starting HTTP server on Worker ${process.pid}`, err);
     }
-  } catch (err) {
-    LoggerService.error(`Error while starting HTTP server on Worker ${process.pid}`, err);
-  }
+  })();
   console.log(`Worker ${process.pid} started`);
 }
 
