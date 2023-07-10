@@ -1,14 +1,15 @@
 import path from 'path';
-import { config as dotenv } from 'dotenv';
+import * as dotenv from 'dotenv';
 import { IConfig } from './interfaces/iConfig';
 
 // Load .env file into process.env if it exists. This is convenient for running locally.
-dotenv({
+dotenv.config({
   path: path.resolve(__dirname, '../.env'),
 });
 
 export const config: IConfig = {
-  redisDB: <string>process.env.REDIS_DB,
+  maxCPU: parseInt(process.env.MAX_CPU!, 10) || 4,
+  redisDB: parseInt(process.env.REDIS_DB!, 10) ?? 0,
   redisAuth: <string>process.env.REDIS_AUTH,
   redisHost: <string>process.env.REDIS_HOST,
   redisPort: parseInt(process.env.REDIS_PORT!, 10),
@@ -26,4 +27,10 @@ export const config: IConfig = {
   dbUser: <string>process.env.DB_USER,
   dbPassword: <string>process.env.DB_PASSWORD,
   collectionName: <string>process.env.COLLECTION_NAME,
+  redis: {
+    auth: <string>process.env.REDIS_AUTH,
+    db: parseInt(process.env.REDIS_DB!, 10) || 0,
+    host: <string>process.env.REDIS_HOST,
+    port: parseInt(process.env.REDIS_PORT!, 10),
+  },
 };

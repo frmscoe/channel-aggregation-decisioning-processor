@@ -16,7 +16,6 @@ if (config.nodeEnv !== 'development' && config.nodeEnv !== 'test') {
       default: { appenders: ['logstash'], level: 'info' },
     },
   });
-
 }
 
 const logger = config.nodeEnv === 'development' || config.nodeEnv === 'test' ? console : log4js.getLogger();

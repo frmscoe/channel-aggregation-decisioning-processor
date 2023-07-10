@@ -1,5 +1,6 @@
 export interface IConfig {
-  redisDB: string;
+  maxCPU: number;
+  redisDB: number;
   redisAuth: string;
   redisHost: string;
   redisPort: number;
@@ -17,4 +18,10 @@ export interface IConfig {
   dbUser: string;
   dbPassword: string;
   collectionName: string;
+  redis: {
+    auth: string;
+    db: number;
+    host: string;
+    port: number;
+  };
 }
