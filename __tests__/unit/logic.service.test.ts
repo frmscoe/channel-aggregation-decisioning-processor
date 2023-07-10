@@ -1,16 +1,9 @@
 /* eslint-disable */
-
-import axios from 'axios';
 import apm from 'elastic-apm-node';
-import { app, cache, cacheService, dbService } from '../../src';
-import { NetworkMap } from '../../src/classes/network-map';
-import { RuleResult } from '../../src/classes/rule-result';
+import { cacheService, databaseManager, dbInit, server } from '../../src';
 import { TypologyResult } from '../../src/classes/typology-result';
-import { IPain001Message } from '../../src/interfaces/iPain001';
 import { handleTransaction } from '../../src/services/logic.service';
-
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+import { NetworkMap, Pacs002, RuleResult } from '@frmscoe/frms-coe-lib/lib/interfaces';
 
 jest.mock('elastic-apm-node');
 const mockApm = apm as jest.Mocked<typeof apm>;
@@ -25,9 +18,9 @@ interface MockedSpan extends Omit<apm.Span, 'end'> {
 
 const getMockTransaction = () => {
   const jquote = JSON.parse(
-    '{"TxTp":"pain.001.001.11","CstmrCdtTrfInitn":{"GrpHdr":{"MsgId":"2669e349-500d-44ba-9e27-7767a16608a0","CreDtTm":"2021-10-07T09:25:31.000Z","NbOfTxs":1,"InitgPty":{"Nm":"Ivan Reese Russel-Klein","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1967-11-23","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+27783078685","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+27-783078685"}}},"PmtInf":{"PmtInfId":"b51ec534-ee48-4575-b6a9-ead2955b8069","PmtMtd":"TRA","ReqdAdvcTp":{"DbtAdvc":{"Cd":"ADWD","Prtry":"Advice with transaction details"}},"ReqdExctnDt":{"Dt":"2021-10-07","DtTm":"2021-10-07T09:25:31.000Z"},"Dbtr":{"Nm":"Ivan Reese Russel-Klein","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1957-10-05","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+27783078685","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+27-783078685"}},"DbtrAcct":{"Id":{"Othr":{"Id":"+27783078685","SchmeNm":{"Prtry":"PASSPORT"}}},"Nm":"Ivan Russel-Klein"},"DbtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp001"}}},"CdtTrfTxInf":{"PmtId":{"EndToEndId":"b51ec534-ee48-4575-b6a9-ead2955b8069"},"PmtTpInf":{"CtgyPurp":{"Prtry":"TRANSFER"}},"Amt":{"InstdAmt":{"Amt":{"Amt":"50431891779910900","Ccy":"USD"}},"EqvtAmt":{"Amt":{"Amt":"50431891779910900","Ccy":"USD"},"CcyOfTrf":"USD"}},"ChrgBr":"DEBT","CdtrAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}},"Cdtr":{"Nm":"April Sam Adamson","Id":{"PrvtId":{"DtAndPlcOfBirth":{"BirthDt":"1923-04-26","CityOfBirth":"Unknown","CtryOfBirth":"ZZ"},"Othr":{"Id":"+27782722305","SchmeNm":{"Prtry":"MSISDN"}}}},"CtctDtls":{"MobNb":"+27-782722305"}},"CdtrAcct":{"Id":{"Othr":{"Id":"+27783078685","SchmeNm":{"Prtry":"MSISDN"}}},"Nm":"April Adamson"},"Purp":{"Cd":"MP2P"},"RgltryRptg":{"Dtls":{"Tp":"BALANCE OF PAYMENTS","Cd":"100"}},"RmtInf":{"Ustrd":"Payment of USD 49932566118723700.89 from Ivan to April"},"SplmtryData":{"Envlp":{"Doc":{"Cdtr":{"FrstNm":"Ivan","MddlNm":"Reese","LastNm":"Russel-Klein","MrchntClssfctnCd":"BLANK"},"Dbtr":{"FrstNm":"April","MddlNm":"Sam","LastNm":"Adamson","MrchntClssfctnCd":"BLANK"},"DbtrFinSvcsPrvdrFees":{"Ccy":"USD","Amt":"499325661187237"},"Xprtn":"2021-10-07T09:30:31.000Z"}}}}},"SplmtryData":{"Envlp":{"Doc":{"InitgPty":{"InitrTp":"CONSUMER","Glctn":{"Lat":"-3.1291","Long":"39.0006"}}}}}}}',
+    '{"TxTp":"pacs.002.001.12","FIToFIPmtSts":{"GrpHdr":{"MsgId":"30bea71c5a054978ad0da7f94b2a40e9789","CreDtTm":"${new Date().toISOString()}"},"TxInfAndSts":{"OrgnlInstrId":"5ab4fc7355de4ef8a75b78b00a681ed2255","OrgnlEndToEndId":"2c516801007642dfb89294dde","TxSts":"ACCC","ChrgsInf":[{"Amt":{"Amt":307.14,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp001"}}}},{"Amt":{"Amt":153.57,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp001"}}}},{"Amt":{"Amt":30.71,"Ccy":"USD"},"Agt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}}}],"AccptncDtTm":"2021-12-03T15:24:26.000Z","InstgAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp001"}}},"InstdAgt":{"FinInstnId":{"ClrSysMmbId":{"MmbId":"dfsp002"}}}}}}',
   );
-  const quote: IPain001Message = Object.assign(new IPain001Message(), jquote);
+  const quote: Pacs002 = Object.assign({}, jquote);
   return quote;
 };
 
@@ -47,36 +40,37 @@ const getMockNetworkMapWithMultipleChannels = () => {
   return networkMap;
 };
 
-afterAll(async (done) => {
-  cache.close();
-  cacheService.redisClient.quit();
-  dbService.client.close();
-  app.terminate();
-  done();
+afterAll(async () => {});
+
+beforeAll(async () => {
+  await dbInit();
 });
 
 describe('Logic Service', () => {
-  let postSpy: jest.SpyInstance;
-  let getJsonSpy: jest.SpyInstance;
-  let setJsonSpy: jest.SpyInstance;
-  let deleteJsonSpy: jest.SpyInstance;
+  let responseSpy: jest.SpyInstance;
   beforeEach(() => {
-    postSpy = jest.spyOn(axios, 'post').mockImplementation(async (url: string, data?: any) => {
-      return new Promise((resolve, reject) => {
-        resolve({ status: 200 });
-      });
+    responseSpy = jest.spyOn(server, 'handleResponse').mockImplementation(jest.fn());
+
+    jest.spyOn(databaseManager, 'getJson').mockImplementation((key: string): Promise<string> => {
+      return new Promise<string>((resolve, reject) => resolve('[]'));
     });
 
-    getJsonSpy = jest.spyOn(cacheService, 'getJson').mockImplementation((key: string): Promise<string> => {
-      return new Promise<string>((resolve, reject) => resolve('{}'));
+    jest.spyOn(databaseManager, 'setJson').mockImplementation((key: string): Promise<'OK' | undefined> => {
+      return new Promise<'OK' | undefined>((resolve, reject) => resolve('OK'));
     });
 
-    setJsonSpy = jest.spyOn(cacheService, 'setJson').mockImplementation((key: string): Promise<string> => {
-      return new Promise<string>((resolve, reject) => resolve(''));
-    });
-
-    deleteJsonSpy = jest.spyOn(cacheService, 'deleteKey').mockImplementation((key: string): Promise<number> => {
+    jest.spyOn(databaseManager, 'deleteKey').mockImplementation((key: string): Promise<number> => {
       return new Promise<number>((resolve, reject) => resolve(0));
+    });
+
+    jest.spyOn(cacheService, 'deleteKey').mockImplementation((key: string): Promise<number> => {
+      return new Promise<number>((resolve, reject) => resolve(0));
+    });
+    const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
+    jest.spyOn(cacheService, 'addOneGetAll').mockImplementation((key: string, value: string): Promise<string[] | null> => {
+      return new Promise<string[]>((resolve, reject) =>
+        resolve([JSON.stringify({ result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults })]),
+      );
     });
   });
 
@@ -84,37 +78,40 @@ describe('Logic Service', () => {
     it('should handle successful request, with an unmatched number', async () => {
       const expectedReq = getMockTransaction();
 
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
 
       const networkMap = getMockNetworkMapWithMultipleChannels();
-      const typologyResult: TypologyResult = { result: 50, id: '', cfg: '', ruleResults };
+      const typologyResult: TypologyResult = { result: 50, id: '030@1.0', cfg: '030@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      mockedAxios.post.mockResolvedValue({ status: 200 });
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult,
+      });
 
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`2 channels initiated for transaction ID: ${expectedReq.CstmrCdtTrfInitn.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Incomplete},{"Channel": 002@1.0, "Result":Incomplete}');
+      expect(responseSpy).toHaveBeenCalledTimes(0);
     });
 
     it('should handle successful request, with a matched number', async () => {
       const expectedReq = getMockTransaction();
 
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
       const networkMap = getMockNetworkMap();
-      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', ruleResults };
+      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      mockedAxios.post.mockResolvedValue({ status: 200 });
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult,
+      });
 
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`1 channels initiated for transaction ID: ${expectedReq.CstmrCdtTrfInitn.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Complete}');
-      expect(result.tadpReqBody).toBeDefined();
+      expect(responseSpy).toHaveBeenCalled();
     });
 
     it('should handle successful request, have existing typology results already', async () => {
       const expectedReq = getMockTransaction();
 
-      getJsonSpy = jest.spyOn(cacheService, 'getJson').mockImplementation((key: string): Promise<string> => {
+      jest.spyOn(databaseManager, 'getJson').mockImplementation((key: string): Promise<string> => {
         return new Promise<string>((resolve, reject) =>
           resolve(
             '[{"id":"028@1.0","cfg":"028@1.0","result":50,"ruleResults":[{"result":true,"id":"","cfg":"","subRuleRef":"","reason":""}]}]',
@@ -122,86 +119,75 @@ describe('Logic Service', () => {
         );
       });
 
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
       const networkMap = getMockNetworkMapWithMultipleChannels();
-      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', ruleResults };
+      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      mockedAxios.post.mockResolvedValue({ status: 200 });
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult,
+      });
 
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`2 channels initiated for transaction ID: ${expectedReq.CstmrCdtTrfInitn.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Incomplete},{"Channel": 002@1.0, "Result":Incomplete}');
-      expect(result.tadpReqBody).toBeUndefined();
-    });
-
-    it('should handle successful request, wrong axios post code', async () => {
-      const expectedReq = getMockTransaction();
-
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
-      const networkMap = getMockNetworkMap();
-      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', ruleResults };
-
-      mockedAxios.post.mockResolvedValue({ status: 201 });
-
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`1 channels initiated for transaction ID: ${expectedReq.CstmrCdtTrfInitn.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Complete}');
-      expect(result.tadpReqBody).toBeDefined();
-    });
-
-    it('should handle successful request, axios post error', async () => {
-      const expectedReq = getMockTransaction();
-
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
-      const networkMap = getMockNetworkMap();
-      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', ruleResults };
-
-      mockedAxios.post.mockRejectedValue(new Error('Test Failure Path'));
-
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`1 channels initiated for transaction ID: ${expectedReq.CstmrCdtTrfInitn.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Complete}');
-      expect(result.tadpReqBody).toBeDefined();
+      expect(responseSpy).toHaveBeenCalledTimes(0);
     });
 
     it('should handle successful request, cacheService error', async () => {
-      getJsonSpy = jest.spyOn(cacheService, 'getJson').mockRejectedValue((key: string): Promise<string> => {
+      jest.spyOn(cacheService, 'addOneGetAll').mockRejectedValue((key: string, value: string): Promise<string[] | null> => {
         return new Promise((resolve, reject) => {
-          resolve('');
+          resolve(null);
         });
       });
 
       const expectedReq = getMockTransaction();
 
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
       const networkMap = getMockNetworkMap();
-      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', ruleResults };
+      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      mockedAxios.post.mockRejectedValue(new Error('Test Failure Path'));
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult,
+      });
 
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`1 channels initiated for transaction ID: ${expectedReq.CstmrCdtTrfInitn.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Error}');
-      expect(result.tadpReqBody).toBeUndefined();
+      expect(responseSpy).toHaveBeenCalledTimes(0);
     });
 
     it('should handle successful request, not all results yet', async () => {
       const expectedReq = getMockTransaction();
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
 
-      getJsonSpy = jest.spyOn(cacheService, 'getJson').mockImplementation((key: string): Promise<string> => {
-        return new Promise<string>((resolve, reject) => resolve('[]'));
+      const networkMap = getMockNetworkMapWithMultipleChannels();
+      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
+
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult,
       });
 
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '' }];
+      expect(responseSpy).toHaveBeenCalledTimes(0);
+    });
+
+    it('should respond with error if nothing comes back from cache', async () => {
+      const expectedReq = getMockTransaction();
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
+
+      jest.spyOn(cacheService, 'addOneGetAll').mockImplementation((key: string, value: string): Promise<string[] | null> => {
+        return new Promise<string[] | null>((resolve, reject) => resolve(null));
+      });
+
       const networkMap = getMockNetworkMapWithMultipleChannels();
-      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', ruleResults };
+      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      mockedAxios.post.mockResolvedValue({ status: 200 });
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult,
+      });
 
-      const result = await handleTransaction(expectedReq, networkMap, typologyResult);
-      expect(result.msg).toEqual(`2 channels initiated for transaction ID: ${expectedReq.CstmrCdtTrfInitn.GrpHdr.MsgId}`);
-      expect(result.result).toEqual('{"Channel": 001@1.0, "Result":Incomplete},{"Channel": 002@1.0, "Result":Incomplete}');
-      expect(result.tadpReqBody).toBeUndefined();
+      expect(responseSpy).toHaveBeenCalledTimes(0);
     });
   });
 });

@@ -30,6 +30,7 @@ COPY ./package.json ./
 COPY ./package-lock.json ./
 COPY ./tsconfig.json ./
 COPY ./global.d.ts ./
+COPY ./.npmrc ./.npmrc
 
 # Install dependencies
 RUN npm install
@@ -66,6 +67,7 @@ ENV REDIS_PORT=6379
 ENV REDIS_DB=0
 ENV REDIS_AUTH=
 ENV TADP_ENDPOINT=
+ENV MAX_CPU=
 ENV prefix_logs="false"
 
 # Set healthcheck command
