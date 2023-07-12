@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { config } from '../config';
 import { LoggerService } from './logger.service';
-import { IPain001Message } from '../interfaces/iPain001';
 import { Channel, NetworkMap } from '../classes/network-map';
-import { RuleResult } from '../classes/rule-result';
 import { TypologyResult } from '../classes/typology-result';
 import { ChannelResult } from '../classes/channel-result';
 import { Result, ExecRequest } from '../interfaces/types';
@@ -18,7 +18,7 @@ const executeRequest = async (
 ): Promise<ExecRequest> => {
   let span;
   try {
-    let transactionType = Object.keys(transaction).find(k => k !== "TxTp") ?? "";
+    const transactionType = Object.keys(transaction).find((k) => k !== 'TxTp') ?? '';
     const transactionID = transaction[transactionType].GrpHdr.MsgId;
     const cacheKey = `${transactionID}_${channel.id}_${channel.cfg}`;
     const jtypologyResults = await cacheService.getJson(cacheKey);
@@ -105,15 +105,14 @@ export const handleTransaction = async (
   let channelRes;
   for (const channel of networkMap.messages[0].channels) {
     channelCounter++;
-    LoggerService.log(`Channel[${channelCounter}] executing request`)
+    LoggerService.log(`Channel[${channelCounter}] executing request`);
     channelRes = await executeRequest(req, channel, networkMap, typologyResult);
     toReturn.push(`{"Channel": ${channel.id}, "Result":${channelRes.result}}`);
     tadProc.push({ tadProc: channelRes?.tadpReqBody });
   }
   let tadpReq = tadProc.map((element) => element.tadProc);
-  let transactionType = Object.keys(req).find(k => k !== "TxTp") ?? "";
+  const transactionType = Object.keys(req).find((k) => k !== 'TxTp') ?? '';
   const transactionID = req[transactionType].GrpHdr.MsgId;
-
 
   const result = {
     msg: `${channelCounter} channels initiated for transaction ID: ${transactionID}`,
