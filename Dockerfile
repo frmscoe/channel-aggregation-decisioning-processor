@@ -6,7 +6,10 @@ LABEL stage=build
 # TS -> JS stage
 
 WORKDIR /home/app
-COPY . .
+COPY ./src ./src
+COPY ./package*.json ./
+COPY ./tsconfig.json ./
+COPY .npmrc ./
 ARG GH_TOKEN
 
 RUN npm ci --ignore-scripts
@@ -21,7 +24,7 @@ COPY .npmrc ./
 ARG GH_TOKEN
 RUN npm ci --omit=dev --ignore-scripts
 
-FROM ${RUN_IMAGE} as run-env
+FROM ${RUN_IMAGE} AS run-env
 USER nonroot
 
 WORKDIR /home/app
@@ -69,6 +72,7 @@ ENV PRODUCER_RETENTION_POLICY=Workqueue
 
 # Set healthcheck command
 HEALTHCHECK --interval=60s CMD [ -e /tmp/.lock ] || exit 1
+EXPOSE 4222
 
 # Execute watchdog command
 CMD ["build/index.js"]
