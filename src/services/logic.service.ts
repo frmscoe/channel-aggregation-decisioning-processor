@@ -10,6 +10,10 @@ import axios from 'axios';
 import apm from 'elastic-apm-node';
 import { cacheService } from '..';
 
+const calculateDuration = (startHrTime: Array<number>, endHrTime: Array<number>): number => {
+  return (endHrTime[0] - startHrTime[0]) * 1000 + (endHrTime[1] - startHrTime[1]) / 1000000;
+};
+
 const executeRequest = async (
   transaction: any,
   channel: Channel,
@@ -17,6 +21,7 @@ const executeRequest = async (
   typologyResult: TypologyResult,
 ): Promise<ExecRequest> => {
   let span;
+  const startHrTime = process.hrtime();
   try {
     const transactionType = Object.keys(transaction).find((k) => k !== 'TxTp') ?? '';
     const transactionID = transaction[transactionType].GrpHdr.MsgId;
@@ -60,7 +65,13 @@ const executeRequest = async (
     // if (!expressionRes)
     //   return 0.0;
 
-    const channelResult: ChannelResult = { result: 0.0, cfg: channel.cfg, id: channel.id, typologyResult: typologyResults };
+    const channelResult: ChannelResult = {
+      prcgTm: calculateDuration(startHrTime, process.hrtime()),
+      result: 0.0,
+      cfg: channel.cfg,
+      id: channel.id,
+      typologyResult: typologyResults,
+    };
     // Send TADP request with this all results - to be persisted at TADP
     let tadpReqBody;
     try {
