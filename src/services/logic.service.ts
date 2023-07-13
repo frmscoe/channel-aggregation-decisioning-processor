@@ -1,21 +1,18 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { config } from '../config';
-import { LoggerService } from './logger.service';
-import { Channel, NetworkMap } from '../classes/network-map';
-import { TypologyResult } from '../classes/typology-result';
-import { ChannelResult } from '../classes/channel-result';
-import { Result, ExecRequest } from '../interfaces/types';
-import axios from 'axios';
+import { Channel, NetworkMap, Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 import apm from 'elastic-apm-node';
-import { cacheService } from '..';
+import { cacheService, server } from '..';
+import { ChannelResult } from '../classes/channel-result';
+import { TypologyResult } from '../classes/typology-result';
+import { ExecRequest, TadpReqBody } from '../interfaces/types';
+import { LoggerService } from './logger.service';
 
 const calculateDuration = (startHrTime: Array<number>, endHrTime: Array<number>): number => {
   return (endHrTime[0] - startHrTime[0]) * 1000 + (endHrTime[1] - startHrTime[1]) / 1000000;
 };
 
 const executeRequest = async (
-  transaction: any,
+  transaction: Pacs002,
   channel: Channel,
   networkMap: NetworkMap,
   typologyResult: TypologyResult,
@@ -23,36 +20,24 @@ const executeRequest = async (
   let span;
   const startHrTime = process.hrtime();
   try {
-    const transactionType = Object.keys(transaction).find((k) => k !== 'TxTp') ?? '';
-    const transactionID = transaction[transactionType].GrpHdr.MsgId;
-    const cacheKey = `${transactionID}_${channel.id}_${channel.cfg}`;
-    const jtypologyResults = await cacheService.getJson(cacheKey);
+    const transactionID = transaction.FIToFIPmtSts.GrpHdr.MsgId;
+    const cacheKey = `CADP_${transactionID}_${channel.id}_${channel.cfg}`;
+    const jtypologyResults = await cacheService.addOneGetAll(cacheKey, JSON.stringify(typologyResult));
     const typologyResults: TypologyResult[] = [];
-    if (jtypologyResults && jtypologyResults.length > 0) Object.assign(typologyResults, JSON.parse(jtypologyResults));
-
-    if (!channel.typologies.some((t) => t.id === typologyResult.id && t.cfg === typologyResult.cfg))
+    if (jtypologyResults && jtypologyResults.length > 0) {
+      for (const jtypologyResult of jtypologyResults) {
+        const typoRes: TypologyResult = new TypologyResult();
+        Object.assign(typoRes, JSON.parse(jtypologyResult));
+        typologyResults.push(typoRes);
+      }
+    } else
       return {
-        result: 'Incomplete',
+        result: 'Error',
         tadpReqBody: undefined,
       };
 
-    if (typologyResults.some((t) => t.id === typologyResult.id && t.cfg === typologyResult.cfg))
-      return {
-        result: 'Incomplete',
-        tadpReqBody: undefined,
-      };
-
-    typologyResults.push({
-      id: typologyResult.id,
-      cfg: typologyResult.cfg,
-      result: typologyResult.result,
-      ruleResults: typologyResult.ruleResults,
-    });
     // check if all results for this Channel is found
     if (typologyResults.length < channel.typologies.length) {
-      span = apm.startSpan(`[${transactionID}] Save Channel interim rule results to Cache`);
-      await cacheService.setJson(cacheKey, JSON.stringify(typologyResults));
-      span?.end();
       return {
         result: 'Incomplete',
         tadpReqBody: undefined,
@@ -73,18 +58,14 @@ const executeRequest = async (
       typologyResult: typologyResults,
     };
     // Send TADP request with this all results - to be persisted at TADP
-    let tadpReqBody;
+    const tadpReqBody: TadpReqBody = {
+      transaction: transaction,
+      networkMap: networkMap,
+      channelResult: channelResult,
+    };
     try {
-      tadpReqBody = {
-        transaction: transaction,
-        networkMap: networkMap,
-        channelResult: channelResult,
-      };
-      span = apm.startSpan(`[${transactionID}] Send Channel result to TADP`);
-      await executePost(config.tadpEndpoint, tadpReqBody);
-      span?.end();
+      await server.handleResponse(tadpReqBody);
     } catch (error) {
-      span?.end();
       LoggerService.error('Error while sending Channel result to TADP', error as Error, 'executeRequest');
     }
     span = apm.startSpan(`[${transactionID}] Delete Typology interim cache key`);
@@ -104,50 +85,23 @@ const executeRequest = async (
   }
 };
 
-export const handleTransaction = async (
-  req: any,
-  networkMap: NetworkMap,
-  // ruleResult: RuleResult[],
-  typologyResult: TypologyResult,
-): Promise<Result> => {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export const handleTransaction = async (transaction: any): Promise<void> => {
+  const pacs002 = transaction.transaction as Pacs002;
+  const networkMap = transaction.networkMap as NetworkMap;
+  const typologyResult = transaction.typologyResult as TypologyResult;
+
   let channelCounter = 0;
   const toReturn = [];
   const tadProc = [];
   let channelRes;
-  for (const channel of networkMap.messages[0].channels) {
+  for (const channel of networkMap.messages[0].channels.filter((c) =>
+    c.typologies.some((t) => t.id === typologyResult.id && t.cfg === typologyResult.cfg),
+  )) {
     channelCounter++;
     LoggerService.log(`Channel[${channelCounter}] executing request`);
-    channelRes = await executeRequest(req, channel, networkMap, typologyResult);
+    channelRes = await executeRequest(pacs002, channel, networkMap, typologyResult);
     toReturn.push(`{"Channel": ${channel.id}, "Result":${channelRes.result}}`);
-    tadProc.push({ tadProc: channelRes?.tadpReqBody });
-  }
-  let tadpReq = tadProc.map((element) => element.tadProc);
-  const transactionType = Object.keys(req).find((k) => k !== 'TxTp') ?? '';
-  const transactionID = req[transactionType].GrpHdr.MsgId;
-
-  const result = {
-    msg: `${channelCounter} channels initiated for transaction ID: ${transactionID}`,
-    result: `${toReturn}`,
-    tadpReqBody: tadpReq[0] || tadpReq[1],
-  };
-  tadpReq = [];
-  LoggerService.log(`${result.msg} for Typology ${typologyResult.id}`);
-  return result;
-};
-
-// Submit the Channel result to the TADP
-const executePost = async (endpoint: string, request: any): Promise<void | Error> => {
-  try {
-    const res = await axios.post(endpoint, request);
-    LoggerService.log(`TADP response statusCode: ${res.status}`);
-    if (res.status !== 200) {
-      LoggerService.trace(`Result from TADP StatusCode != 200, request:\r\n${request}`);
-      LoggerService.error(`Error Code (${res.status}) from TADP with message: \r\n${res.data ?? '[NO MESSAGE]'}`);
-    }
-    LoggerService.log(`Success response from TADP with message: ${res.toString()}`);
-  } catch (err) {
-    LoggerService.error('Error while sending request to TADP', err);
-    LoggerService.trace(`Error while sending request to TADP with Request:\r\n${request}`);
-    throw Error(err as string);
+    tadProc.push({ tadProc: channelRes.tadpReqBody });
   }
 };
