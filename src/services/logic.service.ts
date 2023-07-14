@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { Channel, NetworkMap, Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 import apm from 'elastic-apm-node';
 import { cacheService, server } from '..';
@@ -6,6 +7,10 @@ import { TypologyResult } from '../classes/typology-result';
 import { ExecRequest, TadpReqBody } from '../interfaces/types';
 import { LoggerService } from './logger.service';
 
+const calculateDuration = (startHrTime: Array<number>, endHrTime: Array<number>): number => {
+  return (endHrTime[0] - startHrTime[0]) * 1000 + (endHrTime[1] - startHrTime[1]) / 1000000;
+};
+
 const executeRequest = async (
   transaction: Pacs002,
   channel: Channel,
@@ -13,6 +18,7 @@ const executeRequest = async (
   typologyResult: TypologyResult,
 ): Promise<ExecRequest> => {
   let span;
+  const startHrTime = process.hrtime();
   try {
     const transactionID = transaction.FIToFIPmtSts.GrpHdr.MsgId;
     const cacheKey = `CADP_${transactionID}_${channel.id}_${channel.cfg}`;
@@ -44,7 +50,13 @@ const executeRequest = async (
     // if (!expressionRes)
     //   return 0.0;
 
-    const channelResult: ChannelResult = { result: 0.0, cfg: channel.cfg, id: channel.id, typologyResult: typologyResults };
+    const channelResult: ChannelResult = {
+      prcgTm: calculateDuration(startHrTime, process.hrtime()),
+      result: 0.0,
+      cfg: channel.cfg,
+      id: channel.id,
+      typologyResult: typologyResults,
+    };
     // Send TADP request with this all results - to be persisted at TADP
     const tadpReqBody: TadpReqBody = {
       transaction: transaction,
