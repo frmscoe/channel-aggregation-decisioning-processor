@@ -5,6 +5,7 @@ export type TadpReqBody = {
   transaction: Pacs002;
   networkMap: NetworkMap;
   channelResult: ChannelResult;
+  metaData?: { prcgTmDp: number; prcgTmCRSP: number };
 };
 
 export type Result = {
@@ -17,3 +18,8 @@ export type ExecRequest = {
   result: string | undefined;
   tadpReqBody: TadpReqBody | undefined;
 };
+
+export interface MetaData {
+  prcgTmDp: number;
+  prcgTmCRSP: number;
+}

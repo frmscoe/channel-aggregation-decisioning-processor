@@ -4,7 +4,7 @@ import apm from 'elastic-apm-node';
 import { cacheService, server } from '..';
 import { ChannelResult } from '../classes/channel-result';
 import { TypologyResult } from '../classes/typology-result';
-import { ExecRequest, TadpReqBody } from '../interfaces/types';
+import { ExecRequest, TadpReqBody, MetaData } from '../interfaces/types';
 import { LoggerService } from './logger.service';
 
 const calculateDuration = (startHrTime: Array<number>, endHrTime: Array<number>): number => {
@@ -16,6 +16,7 @@ const executeRequest = async (
   channel: Channel,
   networkMap: NetworkMap,
   typologyResult: TypologyResult,
+  metaData: MetaData,
 ): Promise<ExecRequest> => {
   let span;
   const startHrTime = process.hrtime();
@@ -62,6 +63,7 @@ const executeRequest = async (
       transaction: transaction,
       networkMap: networkMap,
       channelResult: channelResult,
+      metaData,
     };
     try {
       await server.handleResponse(tadpReqBody);
@@ -90,6 +92,7 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
   const pacs002 = transaction.transaction as Pacs002;
   const networkMap = transaction.networkMap as NetworkMap;
   const typologyResult = transaction.typologyResult as TypologyResult;
+  const metaData = transaction?.MetaData as MetaData;
 
   let channelCounter = 0;
   const toReturn = [];
@@ -100,7 +103,7 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
   )) {
     channelCounter++;
     LoggerService.log(`Channel[${channelCounter}] executing request`);
-    channelRes = await executeRequest(pacs002, channel, networkMap, typologyResult);
+    channelRes = await executeRequest(pacs002, channel, networkMap, typologyResult, metaData);
     toReturn.push(`{"Channel": ${channel.id}, "Result":${channelRes.result}}`);
     tadProc.push({ tadProc: channelRes.tadpReqBody });
   }
