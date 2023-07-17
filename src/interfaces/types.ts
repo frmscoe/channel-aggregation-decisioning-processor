@@ -18,3 +18,8 @@ export type ExecRequest = {
   result: string | undefined;
   tadpReqBody: TadpReqBody | undefined;
 };
+
+export interface MetaData {
+  prcgTmDp: number;
+  prcgTmCRSP: number;
+}

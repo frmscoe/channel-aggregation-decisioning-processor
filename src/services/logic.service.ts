@@ -4,17 +4,12 @@ import apm from 'elastic-apm-node';
 import { cacheService, server } from '..';
 import { ChannelResult } from '../classes/channel-result';
 import { TypologyResult } from '../classes/typology-result';
-import { ExecRequest, TadpReqBody } from '../interfaces/types';
+import { ExecRequest, TadpReqBody, MetaData } from '../interfaces/types';
 import { LoggerService } from './logger.service';
 
 const calculateDuration = (startHrTime: Array<number>, endHrTime: Array<number>): number => {
   return (endHrTime[0] - startHrTime[0]) * 1000 + (endHrTime[1] - startHrTime[1]) / 1000000;
 };
-
-interface MetaData {
-  prcgTmDp: number;
-  prcgTmCRSP: number;
-}
 
 const executeRequest = async (
   transaction: Pacs002,
