@@ -5,6 +5,7 @@ export type TadpReqBody = {
   transaction: Pacs002;
   networkMap: NetworkMap;
   channelResult: ChannelResult;
+  metaData?: { prcgTmDp: number; prcgTmCRSP: number };
 };
 
 export type Result = {
