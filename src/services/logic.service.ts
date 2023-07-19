@@ -92,7 +92,7 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
   const pacs002 = transaction.transaction as Pacs002;
   const networkMap = transaction.networkMap as NetworkMap;
   const typologyResult = transaction.typologyResult as TypologyResult;
-  const metaData = transaction?.MetaData as MetaData;
+  const metaData = transaction?.metaData as MetaData;
 
   let channelCounter = 0;
   const toReturn = [];
