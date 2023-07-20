@@ -7,8 +7,9 @@ import { TypologyResult } from '../classes/typology-result';
 import { ExecRequest, TadpReqBody, MetaData } from '../interfaces/types';
 import { LoggerService } from './logger.service';
 
-const calculateDuration = (startHrTime: Array<number>, endHrTime: Array<number>): number => {
-  return (endHrTime[0] - startHrTime[0]) * 1000 + (endHrTime[1] - startHrTime[1]) / 1000000;
+const calculateDuration = (startTime: bigint): number => {
+  const endTime = process.hrtime.bigint();
+  return Number(endTime - startTime);
 };
 
 const executeRequest = async (
@@ -19,7 +20,7 @@ const executeRequest = async (
   metaData: MetaData,
 ): Promise<ExecRequest> => {
   let span;
-  const startHrTime = process.hrtime();
+  const startTime = process.hrtime.bigint();
   try {
     const transactionID = transaction.FIToFIPmtSts.GrpHdr.MsgId;
     const cacheKey = `CADP_${transactionID}_${channel.id}_${channel.cfg}`;
@@ -52,7 +53,7 @@ const executeRequest = async (
     //   return 0.0;
 
     const channelResult: ChannelResult = {
-      prcgTm: calculateDuration(startHrTime, process.hrtime()),
+      prcgTm: calculateDuration(startTime),
       result: 0.0,
       cfg: channel.cfg,
       id: channel.id,
