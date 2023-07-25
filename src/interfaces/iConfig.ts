@@ -1,3 +1,4 @@
+import { type RedisConfig } from '@frmscoe/frms-coe-lib/lib/interfaces';
 export interface IConfig {
   maxCPU: number;
   redisDB: number;
@@ -18,10 +19,5 @@ export interface IConfig {
   dbUser: string;
   dbPassword: string;
   collectionName: string;
-  redis: {
-    auth: string;
-    db: number;
-    host: string;
-    port: number;
-  };
+  redis: RedisConfig;
 }
