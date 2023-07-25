@@ -18,8 +18,9 @@ const executeRequest = async (
   networkMap: NetworkMap,
   typologyResult: TypologyResult,
   metaData: MetaData,
+  parentSpanId: string | undefined,
 ): Promise<ExecRequest> => {
-  let span;
+  const span = apm.startSpan('executeRequest', { childOf: parentSpanId });
   const startTime = process.hrtime.bigint();
   try {
     const transactionID = transaction.FIToFIPmtSts.GrpHdr.MsgId;
@@ -66,14 +67,20 @@ const executeRequest = async (
       channelResult: channelResult,
       metaData,
     };
+    const spanResp = apm.startSpan('tadp.handleResponse', { childOf: span?.ids['span.id'] });
     try {
       await server.handleResponse(tadpReqBody);
     } catch (error) {
       LoggerService.error('Error while sending Channel result to TADP', error as Error, 'executeRequest');
+    } finally {
+      spanResp?.end();
     }
-    span = apm.startSpan(`[${transactionID}] Delete Typology interim cache key`);
+
+    const spanDeleteCacheKey = apm.startSpan(`[${transactionID}] cache.delete.key`, {
+      childOf: span?.ids['span.id'],
+    });
     await cacheService.deleteKey(cacheKey);
-    span?.end();
+    spanDeleteCacheKey?.end();
     return {
       result: 'Complete',
       tadpReqBody,
@@ -90,6 +97,7 @@ const executeRequest = async (
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const handleTransaction = async (transaction: any): Promise<void> => {
+  const span = apm.startSpan('handleTransaction');
   const pacs002 = transaction.transaction as Pacs002;
   const networkMap = transaction.networkMap as NetworkMap;
   const typologyResult = transaction.typologyResult as TypologyResult;
@@ -104,8 +112,9 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
   )) {
     channelCounter++;
     LoggerService.log(`Channel[${channelCounter}] executing request`);
-    channelRes = await executeRequest(pacs002, channel, networkMap, typologyResult, metaData);
+    channelRes = await executeRequest(pacs002, channel, networkMap, typologyResult, metaData, span?.ids['span.id']);
     toReturn.push(`{"Channel": ${channel.id}, "Result":${channelRes.result}}`);
     tadProc.push({ tadProc: channelRes.tadpReqBody });
   }
+  span?.end();
 };
