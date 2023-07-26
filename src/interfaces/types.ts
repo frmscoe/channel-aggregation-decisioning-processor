@@ -1,23 +1,23 @@
-import { ChannelResult } from '../classes/channel-result';
-import { NetworkMap, Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
+import { type ChannelResult } from '../classes/channel-result';
+import { type NetworkMap, type Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 
-export type TadpReqBody = {
+export interface TadpReqBody {
   transaction: Pacs002;
   networkMap: NetworkMap;
   channelResult: ChannelResult;
   metaData?: { prcgTmDp: number; prcgTmCRSP: number };
-};
+}
 
-export type Result = {
+export interface Result {
   msg: string | undefined;
   result: string;
   tadpReqBody: TadpReqBody | undefined;
-};
+}
 
-export type ExecRequest = {
+export interface ExecRequest {
   result: string | undefined;
   tadpReqBody: TadpReqBody | undefined;
-};
+}
 
 export interface MetaData {
   prcgTmDp: number;

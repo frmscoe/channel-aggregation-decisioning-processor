@@ -1,11 +1,10 @@
-import { CreateDatabaseManager, DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
-import { StartupFactory, IStartupService } from '@frmscoe/frms-coe-startup-lib';
+import { CreateDatabaseManager, type DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
+import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-lib';
 import cluster from 'cluster';
 import apm from 'elastic-apm-node';
-import NodeCache from 'node-cache';
+import type NodeCache from 'node-cache';
 import os from 'os';
 import { config } from './config';
-import { iCacheService } from './interfaces/iCacheService';
 import { Services } from './services';
 import { LoggerService } from './services/logger.service';
 import { handleTransaction } from './services/logic.service';
@@ -21,25 +20,24 @@ apm.start({
 });
 
 let cache: NodeCache;
-export const cacheService: iCacheService = Services.getCacheClientInstance();
 
 const databaseManagerConfig = {
   redisConfig: {
     db: config.redis.db,
-    host: config.redis.host,
-    password: config.redis.auth,
-    port: config.redis.port,
+    servers: config.redis.servers,
+    password: config.redis.password,
+    isCluster: config.redis.isCluster,
   },
 };
 
 let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;
 export let server: IStartupService;
 
-export const dbInit = async () => {
+export const dbInit = async (): Promise<void> => {
   databaseManager = await CreateDatabaseManager(databaseManagerConfig);
 };
 // handleTransaction
-export const runServer = async () => {
+export const runServer = async (): Promise<void> => {
   server = new StartupFactory();
   if (config.nodeEnv === 'test') return;
   dbInit();
@@ -59,7 +57,7 @@ process.on('uncaughtException', (err) => {
 });
 
 process.on('unhandledRejection', (err) => {
-  LoggerService.error(`process on unhandledRejection error: ${err ?? '[NoMetaData]'}`);
+  LoggerService.error(`process on unhandledRejection error: ${JSON.stringify(err) ?? '[NoMetaData]'}`);
 });
 
 (async () => {
