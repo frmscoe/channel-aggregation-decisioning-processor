@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import { Channel, NetworkMap, Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
+import { type Channel, type NetworkMap, type Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 import apm from 'elastic-apm-node';
-import { cacheService, server } from '..';
-import { ChannelResult } from '../classes/channel-result';
+import { databaseManager, server } from '..';
+import { type ChannelResult } from '../classes/channel-result';
 import { TypologyResult } from '../classes/typology-result';
-import { ExecRequest, TadpReqBody, MetaData } from '../interfaces/types';
+import { type ExecRequest, type TadpReqBody, type MetaData } from '../interfaces/types';
 import { LoggerService } from './logger.service';
 
 const calculateDuration = (startTime: bigint): number => {
@@ -24,7 +24,7 @@ const executeRequest = async (
   try {
     const transactionID = transaction.FIToFIPmtSts.GrpHdr.MsgId;
     const cacheKey = `CADP_${transactionID}_${channel.id}_${channel.cfg}`;
-    const jtypologyResults = await cacheService.addOneGetAll(cacheKey, JSON.stringify(typologyResult));
+    const jtypologyResults = await databaseManager.addOneGetAll(cacheKey, JSON.stringify(typologyResult));
     const typologyResults: TypologyResult[] = [];
     if (jtypologyResults && jtypologyResults.length > 0) {
       for (const jtypologyResult of jtypologyResults) {
@@ -61,9 +61,9 @@ const executeRequest = async (
     };
     // Send TADP request with this all results - to be persisted at TADP
     const tadpReqBody: TadpReqBody = {
-      transaction: transaction,
-      networkMap: networkMap,
-      channelResult: channelResult,
+      transaction,
+      networkMap,
+      channelResult,
       metaData,
     };
     try {
@@ -72,7 +72,7 @@ const executeRequest = async (
       LoggerService.error('Error while sending Channel result to TADP', error as Error, 'executeRequest');
     }
     span = apm.startSpan(`[${transactionID}] Delete Typology interim cache key`);
-    await cacheService.deleteKey(cacheKey);
+    await databaseManager.deleteKey(cacheKey);
     span?.end();
     return {
       result: 'Complete',
@@ -105,7 +105,7 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
     channelCounter++;
     LoggerService.log(`Channel[${channelCounter}] executing request`);
     channelRes = await executeRequest(pacs002, channel, networkMap, typologyResult, metaData);
-    toReturn.push(`{"Channel": ${channel.id}, "Result":${channelRes.result}}`);
+    toReturn.push(`{"Channel": ${channel.id}, "Result":${JSON.stringify(channelRes.result)}}`);
     tadProc.push({ tadProc: channelRes.tadpReqBody });
   }
 };
