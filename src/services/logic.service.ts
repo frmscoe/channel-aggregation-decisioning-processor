@@ -18,9 +18,9 @@ const executeRequest = async (
   networkMap: NetworkMap,
   typologyResult: TypologyResult,
   metaData: MetaData,
-  parentSpanId: string | undefined,
 ): Promise<ExecRequest> => {
-  const span = apm.startSpan('executeRequest', { childOf: parentSpanId });
+  LoggerService.log('execute Request');
+  const span = apm.startSpan('executeRequest');
   const startTime = process.hrtime.bigint();
   try {
     const transactionID = transaction.FIToFIPmtSts.GrpHdr.MsgId;
@@ -33,19 +33,25 @@ const executeRequest = async (
         Object.assign(typoRes, JSON.parse(jtypologyResult));
         typologyResults.push(typoRes);
       }
-    } else
+    } else {
+      LoggerService.log('jtypologyResults is empty');
       return {
         result: 'Error',
         tadpReqBody: undefined,
       };
+    }
+    LoggerService.log('jtypologyResults is ok');
 
     // check if all results for this Channel is found
     if (typologyResults.length < channel.typologies.length) {
+      LoggerService.log('jtypologyResults is less than typologies');
       return {
         result: 'Incomplete',
         tadpReqBody: undefined,
       };
     }
+    LoggerService.log('typologyResults is ok');
+
     // else means we have all results for Channel, so lets evaluate result
 
     // Keep scaffold here - this will be used in future.
@@ -67,7 +73,8 @@ const executeRequest = async (
       channelResult,
       metaData,
     };
-    const spanResp = apm.startSpan('tadp.handleResponse', { childOf: span?.ids['span.id'] });
+    const spanResp = apm.startSpan('tadp.handleResponse');
+    LoggerService.log('handleResp');
     try {
       await server.handleResponse(tadpReqBody);
     } catch (error) {
@@ -75,10 +82,9 @@ const executeRequest = async (
     } finally {
       spanResp?.end();
     }
+    LoggerService.log('handled Resp');
 
-    const spanDeleteCacheKey = apm.startSpan(`[${transactionID}] cache.delete.key`, {
-      childOf: span?.ids['span.id'],
-    });
+    const spanDeleteCacheKey = apm.startSpan(`[${transactionID}] cache.delete.key`);
     await databaseManager.deleteKey(cacheKey);
     spanDeleteCacheKey?.end();
     span?.end();
@@ -113,7 +119,7 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
   )) {
     channelCounter++;
     LoggerService.log(`Channel[${channelCounter}] executing request`);
-    channelRes = await executeRequest(pacs002, channel, networkMap, typologyResult, metaData, apmTransaction?.ids['transaction.id']);
+    channelRes = await executeRequest(pacs002, channel, networkMap, typologyResult, metaData);
     toReturn.push(`{"Channel": ${channel.id}, "Result":${JSON.stringify(channelRes.result)}}`);
     tadProc.push({ tadProc: channelRes.tadpReqBody });
   }
