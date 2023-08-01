@@ -34,17 +34,17 @@ const executeRequest = async (
         typologyResults.push(typoRes);
       }
     } else {
-      LoggerService.log('jtypologyResults is empty');
+      LoggerService.error('typology results is empty');
       return {
         result: 'Error',
         tadpReqBody: undefined,
       };
     }
-    LoggerService.log('jtypologyResults is ok');
+    LoggerService.trace('typology results is ok');
 
     // check if all results for this Channel is found
     if (typologyResults.length < channel.typologies.length) {
-      LoggerService.log('jtypologyResults is less than typologies');
+      LoggerService.warn('typology results are less than channel typologies');
       return {
         result: 'Incomplete',
         tadpReqBody: undefined,

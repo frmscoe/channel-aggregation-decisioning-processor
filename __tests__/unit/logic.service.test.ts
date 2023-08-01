@@ -132,6 +132,24 @@ describe('Logic Service', () => {
       expect(responseSpy).toHaveBeenCalledTimes(0);
     });
 
+    it('should handle successful request, with a matched number', async () => {
+      const expectedReq = getMockTransaction();
+      jest.spyOn(server, 'handleResponse').mockImplementation(() => {
+        throw new Error('something bad happened');
+      });
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
+      const networkMap = getMockNetworkMap();
+      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
+
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult,
+      });
+
+      expect(responseSpy).toHaveBeenCalled();
+    });
+
     it('should handle successful request, cache error', async () => {
       jest.spyOn(databaseManager, 'addOneGetAll').mockRejectedValue((key: string, value: string): Promise<string[] | null> => {
         return Promise.resolve(null);
