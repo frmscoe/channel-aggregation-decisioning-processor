@@ -5,7 +5,7 @@ export interface TadpReqBody {
   transaction: Pacs002;
   networkMap: NetworkMap;
   channelResult: ChannelResult;
-  metaData?: { prcgTmDp: number; prcgTmCRSP: number };
+  metaData?: MetaData;
 }
 
 export interface Result {
@@ -22,4 +22,5 @@ export interface ExecRequest {
 export interface MetaData {
   prcgTmDp: number;
   prcgTmCRSP: number;
+  traceParent?: string | null;
 }

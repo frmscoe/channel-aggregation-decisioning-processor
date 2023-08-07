@@ -64,13 +64,15 @@ const executeRequest = async (
       transaction,
       networkMap,
       channelResult,
-      metaData,
+      metaData: { ...metaData, traceParent: apm.currentTraceparent },
     };
+    const apmTadProc = apm.startSpan('tadProc.exec');
     try {
       await server.handleResponse(tadpReqBody);
     } catch (error) {
       LoggerService.error('Error while sending Channel result to TADP', error as Error, 'executeRequest');
     }
+    apmTadProc?.end();
     span = apm.startSpan(`[${transactionID}] Delete Typology interim cache key`);
     await databaseManager.deleteKey(cacheKey);
     span?.end();
@@ -104,7 +106,13 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
   )) {
     channelCounter++;
     LoggerService.log(`Channel[${channelCounter}] executing request`);
+    const traceParent = metaData?.traceParent ?? undefined;
+    const apmTransaction = apm.startTransaction('cadproc.exec', {
+      childOf: traceParent,
+    });
+    LoggerService.trace(`traceParent: ${JSON.stringify(traceParent)}`);
     channelRes = await executeRequest(pacs002, channel, networkMap, typologyResult, metaData);
+    apmTransaction?.end();
     toReturn.push(`{"Channel": ${channel.id}, "Result":${JSON.stringify(channelRes.result)}}`);
     tadProc.push({ tadProc: channelRes.tadpReqBody });
   }
