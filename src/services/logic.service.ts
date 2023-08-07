@@ -106,10 +106,11 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
   )) {
     channelCounter++;
     LoggerService.log(`Channel[${channelCounter}] executing request`);
+    const traceParent = metaData?.traceParent ?? undefined;
     const apmTransaction = apm.startTransaction('cadproc.exec', {
-      childOf: metaData.traceParent!,
+      childOf: traceParent,
     });
-    LoggerService.log(`traceParent from TYPOLOGY PROCESSOR ${JSON.stringify(metaData.traceParent)}`);
+    LoggerService.trace(`traceParent: ${JSON.stringify(metaData?.traceParent)}`);
     channelRes = await executeRequest(pacs002, channel, networkMap, typologyResult, metaData);
     apmTransaction?.end();
     toReturn.push(`{"Channel": ${channel.id}, "Result":${JSON.stringify(channelRes.result)}}`);
