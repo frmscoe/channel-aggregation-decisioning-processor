@@ -1,23 +1,12 @@
 import { CreateDatabaseManager, type DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
 import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-lib';
 import cluster from 'cluster';
-import apm from 'elastic-apm-node';
 import type NodeCache from 'node-cache';
 import os from 'os';
 import { config } from './config';
 import { Services } from './services';
 import { LoggerService } from './services/logger.service';
 import { handleTransaction } from './services/logic.service';
-
-// if (config.apmLogging)
-apm.start({
-  serviceName: config.functionName,
-  secretToken: config.apmSecretToken,
-  serverUrl: config.apmURL,
-  usePathAsTransactionName: true,
-  active: config.apmLogging,
-  transactionIgnoreUrls: ['/health'],
-});
 
 let cache: NodeCache;
 
