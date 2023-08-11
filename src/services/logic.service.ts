@@ -71,7 +71,7 @@ const executeRequest = async (
       transaction,
       networkMap,
       channelResult,
-      metaData,
+      metaData: { ...metaData, traceParent: apm.currentTraceparent },
     };
     const spanResp = apm.startSpan('tadp.handleResponse');
     LoggerService.log('handleResp');
@@ -119,7 +119,13 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
   )) {
     channelCounter++;
     LoggerService.log(`Channel[${channelCounter}] executing request`);
+    const traceParent = metaData?.traceParent ?? undefined;
+    const apmTransaction = apm.startTransaction(`cadproc.exec.${channel.id}`, {
+      childOf: traceParent,
+    });
+    LoggerService.trace(`traceParent: ${JSON.stringify(traceParent)}`);
     channelRes = await executeRequest(pacs002, channel, networkMap, typologyResult, metaData);
+    apmTransaction?.end();
     toReturn.push(`{"Channel": ${channel.id}, "Result":${JSON.stringify(channelRes.result)}}`);
     tadProc.push({ tadProc: channelRes.tadpReqBody });
   }
