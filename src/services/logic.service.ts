@@ -107,7 +107,7 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
     channelCounter++;
     LoggerService.log(`Channel[${channelCounter}] executing request`);
     const traceParent = metaData?.traceParent ?? undefined;
-    const apmTransaction = apm.startTransaction('cadproc.exec', {
+    const apmTransaction = apm.startTransaction(`cadproc.exec.${channel.id}`, {
       childOf: traceParent,
     });
     LoggerService.trace(`traceParent: ${JSON.stringify(traceParent)}`);
