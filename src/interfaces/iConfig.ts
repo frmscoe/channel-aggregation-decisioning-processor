@@ -6,8 +6,11 @@ export interface IConfig {
   redisHost: string;
   redisPort: number;
   restPort: number;
-  logstashHost: string;
-  logstashPort: number;
+  logger: {
+    logstashHost: string;
+    logstashPort: number;
+    logstashLevel: string;
+  };
   functionName: string;
   tadpEndpoint: string;
   apmLogging: boolean;
