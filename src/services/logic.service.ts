@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { type Channel, type NetworkMap, type Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 import apm from 'elastic-apm-node';
-import { databaseManager, server } from '..';
+import { databaseManager, server, loggerService } from '..';
 import { type ChannelResult } from '../classes/channel-result';
 import { TypologyResult } from '../classes/typology-result';
 import { type ExecRequest, type TadpReqBody, type MetaData } from '../interfaces/types';
-import { LoggerService } from './logger.service';
 
 const calculateDuration = (startTime: bigint): number => {
   const endTime = process.hrtime.bigint();
@@ -70,7 +69,7 @@ const executeRequest = async (
     try {
       await server.handleResponse(tadpReqBody);
     } catch (error) {
-      LoggerService.error('Error while sending Channel result to TADP', error as Error, 'executeRequest');
+      loggerService.error('Error while sending Channel result to TADP', error as Error, 'executeRequest');
     }
     apmTadProc?.end();
     span = apm.startSpan(`[${transactionID}] Delete Typology interim cache key`);
@@ -82,7 +81,7 @@ const executeRequest = async (
     };
   } catch (error) {
     span?.end();
-    LoggerService.error(`Failed to process Channel ${channel.id} request`, error as Error, 'executeRequest');
+    loggerService.error(`Failed to process Channel ${channel.id} request`, error as Error, 'executeRequest');
     return {
       result: 'Error',
       tadpReqBody: undefined,
@@ -105,12 +104,12 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
     c.typologies.some((t) => t.id === typologyResult.id && t.cfg === typologyResult.cfg),
   )) {
     channelCounter++;
-    LoggerService.log(`Channel[${channelCounter}] executing request`);
+    loggerService.log(`Channel[${channelCounter}] executing request`);
     const traceParent = metaData?.traceParent ?? undefined;
     const apmTransaction = apm.startTransaction(`cadproc.exec.${channel.id}`, {
       childOf: traceParent,
     });
-    LoggerService.trace(`traceParent: ${JSON.stringify(traceParent)}`);
+    loggerService.trace(`traceParent: ${JSON.stringify(traceParent)}`);
     channelRes = await executeRequest(pacs002, channel, networkMap, typologyResult, metaData);
     apmTransaction?.end();
     toReturn.push(`{"Channel": ${channel.id}, "Result":${JSON.stringify(channelRes.result)}}`);
