@@ -42,7 +42,6 @@ ENV upstream_url="http://127.0.0.1:3000"
 ENV exec_timeout="10s"
 ENV write_timeout="15s"
 ENV read_timeout="15s"
-ENV REST_PORT=3000
 ENV FUNCTION_NAME=channel-aggregation-decisioning-processor-rel-1-0-0
 ENV APM_LOGGING=true
 ENV APM_URL=http://apm-server.development.svc.cluster.local:8200/
@@ -60,7 +59,6 @@ ENV REDIS_DB=0
 ENV REDIS_AUTH=
 ENV REDIS_SERVERS=
 ENV REDIS_IS_CLUSTER=
-ENV TADP_ENDPOINT=
 ENV MAX_CPU=
 ENV prefix_logs="false"
 
