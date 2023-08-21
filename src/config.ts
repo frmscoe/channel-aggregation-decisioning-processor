@@ -9,18 +9,12 @@ dotenv.config({
 
 export const config: IConfig = {
   maxCPU: parseInt(process.env.MAX_CPU!, 10) || 4,
-  redisDB: parseInt(process.env.REDIS_DB!, 10) ?? 0,
-  redisAuth: process.env.REDIS_AUTH as string,
-  redisHost: process.env.REDIS_HOST as string,
-  redisPort: parseInt(process.env.REDIS_PORT!, 10),
-  restPort: parseInt(process.env.REST_PORT!, 10),
   logger: {
     logstashHost: process.env.LOGSTASH_HOST as string,
     logstashPort: parseInt(process.env.LOGSTASH_PORT ?? '0', 10),
     logstashLevel: (process.env.LOGSTASH_LEVEL as string) || 'info',
   },
   functionName: process.env.FUNCTION_NAME as string,
-  tadpEndpoint: process.env.TADP_ENDPOINT as string,
   apmLogging: process.env.APM_LOGGING === 'true',
   apmSecretToken: process.env.APM_SECRET_TOKEN as string,
   apmURL: process.env.APM_URL as string,
