@@ -42,26 +42,37 @@ ENV upstream_url="http://127.0.0.1:3000"
 ENV exec_timeout="10s"
 ENV write_timeout="15s"
 ENV read_timeout="15s"
+ENV prefix_logs="false"
+
+ENV NODE_ENV=prod
+ENV MAX_CPU=
 ENV FUNCTION_NAME=channel-aggregation-decisioning-processor-rel-1-0-0
+
+#Apm
 ENV APM_LOGGING=true
 ENV APM_URL=http://apm-server.development.svc.cluster.local:8200/
 ENV APM_SECRET_TOKEN=
-ENV NODE_ENV=prod
+
+#Logstash
 ENV LOGSTASH_HOST=logstash.development.svc.cluster.local
 ENV LOGSTASH_PORT=8080
 ENV LOGSTASH_LEVEL='info'
+
+# Database
 ENV DB_URL=
 ENV DB_NAME=Configuration
 ENV DB_USER=root
 ENV DB_PASSWORD=
 ENV COLLECTION_NAME=channelExpression
+
+# Redis
 ENV REDIS_DB=0
 ENV REDIS_AUTH=
 ENV REDIS_SERVERS=
 ENV REDIS_IS_CLUSTER=
-ENV MAX_CPU=
-ENV prefix_logs="false"
 
+
+# Nats
 ENV STARTUP_TYPE=nats
 ENV SERVER_URL=0.0.0.0:4222
 ENV PRODUCER_STREAM=
