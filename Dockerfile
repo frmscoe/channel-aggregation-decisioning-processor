@@ -48,21 +48,21 @@ ENV NODE_ENV=prod
 ENV MAX_CPU=
 ENV FUNCTION_NAME=channel-aggregation-decisioning-processor-rel-1-0-0
 
-#Apm
+# Apm
 ENV APM_LOGGING=true
 ENV APM_URL=http://apm-server.development.svc.cluster.local:8200/
 ENV APM_SECRET_TOKEN=
 
-#Logstash
+# Logstash
 ENV LOGSTASH_HOST=logstash.development.svc.cluster.local
 ENV LOGSTASH_PORT=8080
 ENV LOGSTASH_LEVEL='info'
 
 # Database
-ENV DB_URL=
-ENV DB_NAME=Configuration
-ENV DB_USER=root
-ENV DB_PASSWORD=
+ENV DATABASE_URL=
+ENV DATABASE_NAME=Configuration
+ENV DATABASE_USER=root
+ENV DATABASE_PASSWORD=
 ENV COLLECTION_NAME=channelExpression
 
 # Redis
