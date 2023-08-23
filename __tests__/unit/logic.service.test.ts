@@ -72,6 +72,18 @@ describe('Logic Service', () => {
         resolve([JSON.stringify({ result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults })]),
       );
     });
+
+    jest.spyOn(databaseManager, 'addOneGetCount').mockImplementation((...args: unknown[]): Promise<number> => {
+      return new Promise<number>((resolve, reject) => {
+        resolve(1);
+      });
+    });
+
+    jest.spyOn(databaseManager, 'getMembers').mockImplementation((key: string): Promise<string[]> => {
+      return new Promise<string[]>((resolve, reject) =>
+        resolve([JSON.stringify({ result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults })]),
+      );
+    });
   });
 
   describe('Handle Legacy Transaction', () => {
@@ -133,8 +145,14 @@ describe('Logic Service', () => {
     });
 
     it('should handle successful request, cache error', async () => {
-      jest.spyOn(databaseManager, 'addOneGetAll').mockRejectedValue((key: string, value: string): Promise<string[] | null> => {
-        return Promise.resolve(null);
+      jest.spyOn(databaseManager, 'getMembers').mockImplementation((key: string): Promise<string[]> => {
+        return Promise.resolve([]);
+      });
+
+      jest.spyOn(databaseManager, 'addOneGetCount').mockImplementation((...args: unknown[]): Promise<number> => {
+        return new Promise<number>((resolve, reject) => {
+          resolve(1);
+        });
       });
 
       const expectedReq = getMockTransaction();
@@ -168,11 +186,11 @@ describe('Logic Service', () => {
       expect(responseSpy).toHaveBeenCalledTimes(0);
     });
 
-    it('should respond with error if nothing comes back from cache', async () => {
+    it('should respond with error if cache key deletion fails', async () => {
       const expectedReq = getMockTransaction();
       const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
 
-      jest.spyOn(databaseManager, 'addOneGetAll').mockImplementation((key: string, value: string): Promise<string[]> => {
+      jest.spyOn(databaseManager, 'addOneGetAll').mockImplementationOnce((key: string, value: string): Promise<string[]> => {
         return Promise.resolve([]);
       });
 
@@ -186,6 +204,46 @@ describe('Logic Service', () => {
       });
 
       expect(responseSpy).toHaveBeenCalledTimes(0);
+    });
+
+    it('should respond with error if nothing comes back from cache', async () => {
+      const expectedReq = getMockTransaction();
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
+
+      jest.spyOn(databaseManager, 'deleteKey').mockRejectedValue((key: string) => {
+        return Promise.reject();
+      });
+
+      const networkMap = getMockNetworkMap();
+      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
+
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult,
+      });
+
+      expect(responseSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should respond with error if NATS communication Error Occures', async () => {
+      const expectedReq = getMockTransaction();
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
+
+      jest.spyOn(server, 'handleResponse').mockRejectedValueOnce((value: string) => {
+        return Promise.reject();
+      });
+
+      const networkMap = getMockNetworkMap();
+      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
+
+      const result = await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult,
+      });
+
+      expect(responseSpy).toHaveBeenCalledTimes(1);
     });
   });
 });
