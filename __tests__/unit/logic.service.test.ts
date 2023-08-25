@@ -52,25 +52,23 @@ describe('Logic Service', () => {
     responseSpy = jest.spyOn(server, 'handleResponse').mockImplementation(jest.fn());
 
     jest.spyOn(databaseManager, 'getJson').mockImplementation((key: string): Promise<string> => {
-      return new Promise<string>((resolve, reject) => resolve('[]'));
+      return Promise.resolve('[]');
     });
 
     jest.spyOn(databaseManager, 'setJson').mockImplementation((key: string): Promise<void> => {
-      return new Promise<void>((resolve, reject) => resolve());
+      return Promise.resolve();
     });
 
     jest.spyOn(databaseManager, 'deleteKey').mockImplementation((key: string): Promise<void> => {
-      return new Promise<void>((resolve, reject) => resolve());
+      return Promise.resolve();
     });
 
     jest.spyOn(databaseManager, 'deleteKey').mockImplementation((key: string): Promise<void> => {
-      return new Promise<void>((resolve, reject) => resolve());
+      return Promise.resolve();
     });
     const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
     jest.spyOn(databaseManager, 'addOneGetAll').mockImplementation((key: string, value: string): Promise<string[]> => {
-      return new Promise<string[]>((resolve, reject) =>
-        resolve([JSON.stringify({ result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults })]),
-      );
+      return Promise.resolve([JSON.stringify({ result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults })]);
     });
 
     jest.spyOn(databaseManager, 'addOneGetCount').mockImplementation((...args: unknown[]): Promise<number> => {
@@ -78,9 +76,7 @@ describe('Logic Service', () => {
     });
 
     jest.spyOn(databaseManager, 'getMembers').mockImplementation((key: string): Promise<string[]> => {
-      return new Promise<string[]>((resolve, reject) =>
-        resolve([JSON.stringify({ result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults })]),
-      );
+      return Promise.resolve([JSON.stringify({ result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults })]);
     });
   });
 
