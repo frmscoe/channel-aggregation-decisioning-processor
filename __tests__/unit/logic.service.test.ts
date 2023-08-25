@@ -89,7 +89,7 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMapWithMultipleChannels();
       const typologyResult: TypologyResult = { result: 50, id: '030@1.0', cfg: '030@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      const result = await handleTransaction({
+      await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
         typologyResult: typologyResult,
@@ -105,7 +105,7 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMap();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      const result = await handleTransaction({
+      await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
         typologyResult: typologyResult,
@@ -129,7 +129,7 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMapWithMultipleChannels();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      const result = await handleTransaction({
+      await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
         typologyResult: typologyResult,
@@ -153,7 +153,7 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMap();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      const result = await handleTransaction({
+      await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
         typologyResult: typologyResult,
@@ -169,7 +169,7 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMapWithMultipleChannels();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      const result = await handleTransaction({
+      await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
         typologyResult: typologyResult,
@@ -189,7 +189,7 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMapWithMultipleChannels();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      const result = await handleTransaction({
+      await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
         typologyResult: typologyResult,
@@ -209,7 +209,7 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMap();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      const result = await handleTransaction({
+      await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
         typologyResult: typologyResult,
@@ -229,7 +229,7 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMap();
       const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      const result = await handleTransaction({
+      await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
         typologyResult: typologyResult,
