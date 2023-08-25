@@ -74,9 +74,7 @@ describe('Logic Service', () => {
     });
 
     jest.spyOn(databaseManager, 'addOneGetCount').mockImplementation((...args: unknown[]): Promise<number> => {
-      return new Promise<number>((resolve, reject) => {
-        resolve(1);
-      });
+      return Promise.resolve(1);
     });
 
     jest.spyOn(databaseManager, 'getMembers').mockImplementation((key: string): Promise<string[]> => {
@@ -150,9 +148,7 @@ describe('Logic Service', () => {
       });
 
       jest.spyOn(databaseManager, 'addOneGetCount').mockImplementation((...args: unknown[]): Promise<number> => {
-        return new Promise<number>((resolve, reject) => {
-          resolve(1);
-        });
+        return Promise.resolve(1);
       });
 
       const expectedReq = getMockTransaction();
