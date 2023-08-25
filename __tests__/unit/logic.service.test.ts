@@ -139,11 +139,11 @@ describe('Logic Service', () => {
     });
 
     it('should handle successful request, cache error', async () => {
-      jest.spyOn(databaseManager, 'getMembers').mockImplementation((key: string): Promise<string[]> => {
+      jest.spyOn(databaseManager, 'getMembers').mockImplementationOnce((key: string): Promise<string[]> => {
         return Promise.resolve([]);
       });
 
-      jest.spyOn(databaseManager, 'addOneGetCount').mockImplementation((...args: unknown[]): Promise<number> => {
+      jest.spyOn(databaseManager, 'addOneGetCount').mockImplementationOnce((...args: unknown[]): Promise<number> => {
         return Promise.resolve(1);
       });
 
@@ -202,7 +202,7 @@ describe('Logic Service', () => {
       const expectedReq = getMockTransaction();
       const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
 
-      jest.spyOn(databaseManager, 'deleteKey').mockRejectedValue((key: string) => {
+      jest.spyOn(databaseManager, 'deleteKey').mockRejectedValueOnce((key: string) => {
         return Promise.reject();
       });
 
