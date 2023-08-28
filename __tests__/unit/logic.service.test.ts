@@ -32,6 +32,10 @@ const getMockNetworkMap = () => {
   return networkMap;
 };
 
+const getMockTypologyResult = (ruleResults: RuleResult[]): TypologyResult => {
+  return { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
+};
+
 const getMockNetworkMapWithMultipleChannels = () => {
   const jNetworkMap = JSON.parse(
     '{"_key":"26345403","_id":"networkConfiguration/26345403","_rev":"_cxc-1vO---","messages":[{"id":"001@1.0","host":"http://openfaas:8080","cfg":"1.0","txTp":"pain.001.001.11","channels":[{"id":"001@1.0","host":"http://openfaas:8080","cfg":"1.0","typologies":[{"id":"028@1.0","host":"https://frmfaas.sybrin.com/function/off-typology-processor","cfg":"028@1.0","rules":[{"id":"003@1.0","host":"http://openfaas:8080","cfg":"1.0"},{"id":"028@1.0","host":"http://openfaas:8080","cfg":"1.0"}]},{"id":"029@1.0","host":"https://frmfaas.sybrin.com/function/off-typology-processor","cfg":"029@1.0","rules":[{"id":"003@1.0","host":"http://openfaas:8080","cfg":"1.0"},{"id":"005@1.0","host":"http://openfaas:8080","cfg":"1.0"}]}]},{"id":"002@1.0","host":"http://openfaas:8080","cfg":"1.0","typologies":[{"id":"030@1.0","host":"https://frmfaas.sybrin.com/function/off-typology-processor","cfg":"030@1.0","rules":[{"id":"003@1.0","host":"http://openfaas:8080","cfg":"1.0"},{"id":"006@1.0","host":"http://openfaas:8080","cfg":"1.0"}]},{"id":"031@1.0","host":"https://frmfaas.sybrin.com/function/off-typology-processor","cfg":"031@1.0","rules":[{"id":"003@1.0","host":"http://openfaas:8080","cfg":"1.0"},{"id":"007@1.0","host":"http://openfaas:8080","cfg":"1.0"}]}]}]}]}',
@@ -52,25 +56,25 @@ describe('Logic Service', () => {
     responseSpy = jest.spyOn(server, 'handleResponse').mockImplementation(jest.fn());
 
     jest.spyOn(databaseManager, 'getJson').mockImplementation((key: string): Promise<string> => {
-      return new Promise<string>((resolve, reject) => resolve('[]'));
+      return Promise.resolve('[]');
     });
 
     jest.spyOn(databaseManager, 'setJson').mockImplementation((key: string): Promise<void> => {
-      return new Promise<void>((resolve, reject) => resolve());
+      return Promise.resolve();
     });
 
     jest.spyOn(databaseManager, 'deleteKey').mockImplementation((key: string): Promise<void> => {
-      return new Promise<void>((resolve, reject) => resolve());
+      return Promise.resolve();
     });
 
-    jest.spyOn(databaseManager, 'deleteKey').mockImplementation((key: string): Promise<void> => {
-      return new Promise<void>((resolve, reject) => resolve());
-    });
     const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
-    jest.spyOn(databaseManager, 'addOneGetAll').mockImplementation((key: string, value: string): Promise<string[]> => {
-      return new Promise<string[]>((resolve, reject) =>
-        resolve([JSON.stringify({ result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults })]),
-      );
+
+    jest.spyOn(databaseManager, 'addOneGetCount').mockImplementation((...args: unknown[]): Promise<number> => {
+      return Promise.resolve(1);
+    });
+
+    jest.spyOn(databaseManager, 'getMembers').mockImplementation((key: string): Promise<string[]> => {
+      return Promise.resolve([JSON.stringify({ result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults })]);
     });
   });
 
@@ -83,7 +87,7 @@ describe('Logic Service', () => {
       const networkMap = getMockNetworkMapWithMultipleChannels();
       const typologyResult: TypologyResult = { result: 50, id: '030@1.0', cfg: '030@1.0', desc: 'test', threshold: 0, ruleResults };
 
-      const result = await handleTransaction({
+      await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
         typologyResult: typologyResult,
@@ -97,9 +101,9 @@ describe('Logic Service', () => {
 
       const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
       const networkMap = getMockNetworkMap();
-      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
+      const typologyResult: TypologyResult = getMockTypologyResult(ruleResults);
 
-      const result = await handleTransaction({
+      await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
         typologyResult: typologyResult,
@@ -121,9 +125,9 @@ describe('Logic Service', () => {
 
       const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
       const networkMap = getMockNetworkMapWithMultipleChannels();
-      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
+      const typologyResult: TypologyResult = getMockTypologyResult(ruleResults);
 
-      const result = await handleTransaction({
+      await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
         typologyResult: typologyResult,
@@ -133,17 +137,16 @@ describe('Logic Service', () => {
     });
 
     it('should handle successful request, cache error', async () => {
-      jest.spyOn(databaseManager, 'addOneGetAll').mockRejectedValue((key: string, value: string): Promise<string[] | null> => {
-        return Promise.resolve(null);
+      jest.spyOn(databaseManager, 'getMembers').mockImplementationOnce((key: string): Promise<string[]> => {
+        return Promise.resolve([]);
       });
-
       const expectedReq = getMockTransaction();
 
       const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
       const networkMap = getMockNetworkMap();
-      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
+      const typologyResult: TypologyResult = getMockTypologyResult(ruleResults);
 
-      const result = await handleTransaction({
+      await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
         typologyResult: typologyResult,
@@ -157,9 +160,25 @@ describe('Logic Service', () => {
       const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
 
       const networkMap = getMockNetworkMapWithMultipleChannels();
-      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
+      const typologyResult: TypologyResult = getMockTypologyResult(ruleResults);
 
-      const result = await handleTransaction({
+      await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult,
+      });
+
+      expect(responseSpy).toHaveBeenCalledTimes(0);
+    });
+
+    it('should respond with error if cache key deletion fails', async () => {
+      const expectedReq = getMockTransaction();
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
+
+      const networkMap = getMockNetworkMapWithMultipleChannels();
+      const typologyResult: TypologyResult = getMockTypologyResult(ruleResults);
+
+      await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
         typologyResult: typologyResult,
@@ -172,20 +191,40 @@ describe('Logic Service', () => {
       const expectedReq = getMockTransaction();
       const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
 
-      jest.spyOn(databaseManager, 'addOneGetAll').mockImplementation((key: string, value: string): Promise<string[]> => {
-        return Promise.resolve([]);
+      jest.spyOn(databaseManager, 'deleteKey').mockRejectedValueOnce((key: string) => {
+        return Promise.reject();
       });
 
-      const networkMap = getMockNetworkMapWithMultipleChannels();
-      const typologyResult: TypologyResult = { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults };
+      const networkMap = getMockNetworkMap();
+      const typologyResult: TypologyResult = getMockTypologyResult(ruleResults);
 
-      const result = await handleTransaction({
+      await handleTransaction({
         transaction: expectedReq,
         networkMap: networkMap,
         typologyResult: typologyResult,
       });
 
-      expect(responseSpy).toHaveBeenCalledTimes(0);
+      expect(responseSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should respond with error if NATS communication Error Occures', async () => {
+      const expectedReq = getMockTransaction();
+      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '' }];
+
+      jest.spyOn(server, 'handleResponse').mockRejectedValueOnce((value: string) => {
+        return Promise.reject();
+      });
+
+      const networkMap = getMockNetworkMap();
+      const typologyResult: TypologyResult = getMockTypologyResult(ruleResults);
+
+      await handleTransaction({
+        transaction: expectedReq,
+        networkMap: networkMap,
+        typologyResult: typologyResult,
+      });
+
+      expect(responseSpy).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -23,7 +23,18 @@ const executeRequest = async (
   try {
     const transactionID = transaction.FIToFIPmtSts.GrpHdr.MsgId;
     const cacheKey = `CADP_${transactionID}_${channel.id}_${channel.cfg}`;
-    const jtypologyResults = await databaseManager.addOneGetAll(cacheKey, JSON.stringify(typologyResult));
+    const jtypologyCount = await databaseManager.addOneGetCount(cacheKey, JSON.stringify(typologyResult));
+
+    // check if all results for this Channel is found
+    if (jtypologyCount && jtypologyCount < channel.typologies.length) {
+      return {
+        result: 'Incomplete',
+        tadpReqBody: undefined,
+      };
+    }
+
+    // else means we have all results for Channel, so lets evaluate result
+    const jtypologyResults = await databaseManager.getMembers(`${cacheKey}`);
     const typologyResults: TypologyResult[] = [];
     if (jtypologyResults && jtypologyResults.length > 0) {
       for (const jtypologyResult of jtypologyResults) {
@@ -36,15 +47,6 @@ const executeRequest = async (
         result: 'Error',
         tadpReqBody: undefined,
       };
-
-    // check if all results for this Channel is found
-    if (typologyResults.length < channel.typologies.length) {
-      return {
-        result: 'Incomplete',
-        tadpReqBody: undefined,
-      };
-    }
-    // else means we have all results for Channel, so lets evaluate result
 
     // Keep scaffold here - this will be used in future.
     // const expressionRes = await arangoDBService.getExpression(channel.channel_id);
