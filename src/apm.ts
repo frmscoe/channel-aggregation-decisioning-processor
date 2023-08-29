@@ -1,8 +1,7 @@
-import apm from 'elastic-apm-node';
+import { Apm } from '@frmscoe/frms-coe-lib/lib/services/apm';
 import { config } from './config';
 
-// if (config.apmLogging)
-apm.start({
+const apm = new Apm({
   serviceName: config.functionName,
   secretToken: config.apmSecretToken,
   serverUrl: config.apmURL,
@@ -10,3 +9,5 @@ apm.start({
   active: config.apmLogging,
   transactionIgnoreUrls: ['/health'],
 });
+
+export default apm;
