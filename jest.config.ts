@@ -140,7 +140,7 @@ const config: Config.InitialOptions = {
   // runner: "jest-runner",
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
-  setupFiles: ['<rootDir>/.env.test', './cluster-setup.ts'],
+  setupFiles: ['./cluster-setup.ts'],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
   setupFilesAfterEnv: ['./setup.jest.js'],

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import apm from '../apm';
 import { type Channel, type NetworkMap, type Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
-import { databaseManager, server, loggerService } from '..';
-import { type ChannelResult } from '../classes/channel-result';
-import { TypologyResult } from '../classes/typology-result';
-import { type ExecRequest, type TadpReqBody, type MetaData } from '../interfaces/types';
+import { type ChannelResult } from '@frmscoe/frms-coe-lib/lib/interfaces/processor-files/ChannelResult';
+import { TypologyResult } from '@frmscoe/frms-coe-lib/lib/interfaces/processor-files/TypologyResult';
+import { databaseManager, loggerService, server } from '..';
+import { type ExecRequest, type MetaData, type TadpReqBody } from '../interfaces/types';
 
 const calculateDuration = (startTime: bigint): number => {
   const endTime = process.hrtime.bigint();
