@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { databaseManager, dbInit, server } from '../../src';
+import { databaseManager, runServer, server } from '../../src';
 import { TypologyResult } from '@frmscoe/frms-coe-lib/lib/interfaces/processor-files/TypologyResult';
 import { handleTransaction } from '../../src/services/logic.service';
 import { NetworkMap, Pacs002, RuleResult } from '@frmscoe/frms-coe-lib/lib/interfaces';
@@ -32,10 +32,8 @@ const getMockNetworkMapWithMultipleChannels = () => {
   return networkMap;
 };
 
-afterAll(async () => {});
-
 beforeAll(async () => {
-  await dbInit();
+  await runServer();
 });
 
 describe('Logic Service', () => {
