@@ -1,4 +1,4 @@
-import { type ChannelResult } from '../classes/channel-result';
+import { type ChannelResult } from '@frmscoe/frms-coe-lib/lib/interfaces/processor-files/ChannelResult';
 import { type NetworkMap, type Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 
 export interface TadpReqBody {

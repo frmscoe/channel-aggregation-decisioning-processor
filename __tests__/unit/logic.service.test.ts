@@ -1,20 +1,8 @@
 /* eslint-disable */
-import apm from 'elastic-apm-node';
-import { databaseManager, dbInit, server } from '../../src';
-import { TypologyResult } from '../../src/classes/typology-result';
+import { databaseManager, runServer, server } from '../../src';
+import { TypologyResult } from '@frmscoe/frms-coe-lib/lib/interfaces/processor-files/TypologyResult';
 import { handleTransaction } from '../../src/services/logic.service';
 import { NetworkMap, Pacs002, RuleResult } from '@frmscoe/frms-coe-lib/lib/interfaces';
-
-jest.mock('elastic-apm-node');
-const mockApm = apm as jest.Mocked<typeof apm>;
-
-interface MockedSpan extends Omit<apm.Span, 'end'> {
-  end: jest.Mock;
-}
-
-(mockApm.startSpan as jest.MockedFunction<typeof mockApm.startSpan>).mockReturnValue({
-  end: jest.fn(),
-} as MockedSpan);
 
 const getMockTransaction = () => {
   const jquote = JSON.parse(
@@ -44,10 +32,8 @@ const getMockNetworkMapWithMultipleChannels = () => {
   return networkMap;
 };
 
-afterAll(async () => {});
-
 beforeAll(async () => {
-  await dbInit();
+  await runServer();
 });
 
 describe('Logic Service', () => {

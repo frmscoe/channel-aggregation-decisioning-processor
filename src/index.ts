@@ -29,8 +29,8 @@ export const dbInit = async (): Promise<void> => {
 // handleTransaction
 export const runServer = async (): Promise<void> => {
   server = new StartupFactory();
+  await dbInit();
   if (config.nodeEnv === 'test') return;
-  dbInit();
   for (let retryCount = 0; retryCount < 10; retryCount++) {
     loggerService.log('Connecting to nats server...');
     if (!(await server.init(handleTransaction))) {
@@ -80,7 +80,9 @@ if (cluster.isMaster && config.maxCPU !== 1) {
   // In this case it is an HTTP server
   (async () => {
     try {
-      await runServer();
+      if (config.nodeEnv !== 'test') {
+        await runServer();
+      }
     } catch (err) {
       loggerService.error(`Error while starting HTTP server on Worker ${process.pid}`, err);
     }

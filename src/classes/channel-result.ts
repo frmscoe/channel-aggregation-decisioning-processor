@@ -1,8 +1,0 @@
-import { type TypologyResult } from './typology-result';
-export class ChannelResult {
-  id = '';
-  cfg = '';
-  result = 0.0;
-  prcgTm = 0;
-  typologyResult: TypologyResult[] = [];
-}
