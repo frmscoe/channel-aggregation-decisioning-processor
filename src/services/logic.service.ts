@@ -54,6 +54,7 @@ const executeRequest = async (
     //   return 0.0;
 
     const channelResult: ChannelResult = {
+      status: typologyResults.some((c) => c.review === true) ? 'Review' : '',
       prcgTm: calculateDuration(startTime),
       result: 0.0,
       cfg: channel.cfg,
