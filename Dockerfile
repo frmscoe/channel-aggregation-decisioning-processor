@@ -49,7 +49,7 @@ ENV MAX_CPU=
 ENV FUNCTION_NAME=channel-aggregation-decisioning-processor-rel-1-0-0
 
 # Apm
-ENV APM_LOGGING=true
+ENV APM_ACTIVE=true
 ENV APM_URL=http://apm-server.development.svc.cluster.local:8200/
 ENV APM_SECRET_TOKEN=
 
