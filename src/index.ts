@@ -4,7 +4,6 @@ import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-
 import cluster from 'cluster';
 import os from 'os';
 import { config } from './config';
-import { Services } from './services';
 import { handleTransaction } from './services/logic.service';
 
 const databaseManagerConfig = {
