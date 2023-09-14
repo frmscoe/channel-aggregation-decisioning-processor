@@ -2,13 +2,10 @@ import './apm';
 import { CreateDatabaseManager, LoggerService, type DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
 import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-lib';
 import cluster from 'cluster';
-import type NodeCache from 'node-cache';
 import os from 'os';
 import { config } from './config';
 import { Services } from './services';
 import { handleTransaction } from './services/logic.service';
-
-let cache: NodeCache;
 
 const databaseManagerConfig = {
   redisConfig: {
@@ -51,7 +48,6 @@ process.on('unhandledRejection', (err) => {
 });
 
 (async () => {
-  cache = Services.getCacheInstance();
   try {
     if (process.env.NODE_ENV !== 'test') {
       // setup lib - create database instance
@@ -90,4 +86,4 @@ if (cluster.isMaster && config.maxCPU !== 1) {
   loggerService.log(`Worker ${process.pid} started`);
 }
 
-export { cache, databaseManager };
+export { databaseManager };
