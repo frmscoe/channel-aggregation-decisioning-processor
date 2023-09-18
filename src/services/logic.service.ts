@@ -23,7 +23,7 @@ const executeRequest = async (
   try {
     const transactionID = transaction.FIToFIPmtSts.GrpHdr.MsgId;
     const cacheKey = `CADP_${transactionID}_${channel.id}_${channel.cfg}`;
-    const jtypologyCount = await databaseManager.addOneGetCount(cacheKey, serialiseTPResult(typologyResult));
+    const jtypologyCount = await databaseManager.addOneGetCount(cacheKey, serialiseTPResult({ typologyResult }));
 
     // check if all results for this Channel is found
     if (jtypologyCount && jtypologyCount < channel.typologies.length) {
@@ -39,7 +39,7 @@ const executeRequest = async (
     if (jtypologyResults && jtypologyResults.length > 0) {
       for (const jtypologyResult of jtypologyResults) {
         const typoRes: TypologyResult = new TypologyResult();
-        Object.assign(typoRes, JSON.parse(jtypologyResult));
+        Object.assign(typoRes, JSON.parse(jtypologyResult).typologyResult);
         typologyResults.push(typoRes);
       }
     } else
@@ -99,6 +99,7 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
   const metaData = transaction?.metaData as MetaData;
 
   let channelCounter = 0;
+  let channelRes;
   for (const channel of networkMap.messages[0].channels.filter((c) =>
     c.typologies.some((t) => t.id === typologyResult.id && t.cfg === typologyResult.cfg),
   )) {
