@@ -99,9 +99,6 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
   const metaData = transaction?.metaData as MetaData;
 
   let channelCounter = 0;
-  const toReturn = [];
-  const tadProc = [];
-  let channelRes;
   for (const channel of networkMap.messages[0].channels.filter((c) =>
     c.typologies.some((t) => t.id === typologyResult.id && t.cfg === typologyResult.cfg),
   )) {
@@ -111,9 +108,7 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
     const apmTransaction = apm.startTransaction(`cadproc.exec.${channel.id}`, {
       childOf: traceParent,
     });
-    channelRes = await executeRequest(pacs002, channel, networkMap, typologyResult, metaData);
+    await executeRequest(pacs002, channel, networkMap, typologyResult, metaData);
     apmTransaction?.end();
-    toReturn.push(`{"Channel": ${channel.id}, "Result":${JSON.stringify(channelRes.result)}}`);
-    tadProc.push({ tadProc: channelRes.tadpReqBody });
   }
 };
