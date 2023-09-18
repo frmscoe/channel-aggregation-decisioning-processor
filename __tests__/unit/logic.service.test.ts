@@ -24,6 +24,8 @@ const getMockTypologyResult = (ruleResults: RuleResult[]): TypologyResult => {
   return { result: 50, id: '028@1.0', cfg: '028@1.0', desc: 'test', threshold: 0, ruleResults, prcgTm: 0 };
 };
 
+const createRuleResults = (): RuleResult[] => [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '', prcgTm: 0 }];
+
 const getMockNetworkMapWithMultipleChannels = () => {
   const jNetworkMap = JSON.parse(
     '{"_key":"26345403","_id":"networkConfiguration/26345403","_rev":"_cxc-1vO---","messages":[{"id":"001@1.0","host":"http://openfaas:8080","cfg":"1.0","txTp":"pain.001.001.11","channels":[{"id":"001@1.0","host":"http://openfaas:8080","cfg":"1.0","typologies":[{"id":"028@1.0","host":"https://frmfaas.sybrin.com/function/off-typology-processor","cfg":"028@1.0","rules":[{"id":"003@1.0","host":"http://openfaas:8080","cfg":"1.0"},{"id":"028@1.0","host":"http://openfaas:8080","cfg":"1.0"}]},{"id":"029@1.0","host":"https://frmfaas.sybrin.com/function/off-typology-processor","cfg":"029@1.0","rules":[{"id":"003@1.0","host":"http://openfaas:8080","cfg":"1.0"},{"id":"005@1.0","host":"http://openfaas:8080","cfg":"1.0"}]}]},{"id":"002@1.0","host":"http://openfaas:8080","cfg":"1.0","typologies":[{"id":"030@1.0","host":"https://frmfaas.sybrin.com/function/off-typology-processor","cfg":"030@1.0","rules":[{"id":"003@1.0","host":"http://openfaas:8080","cfg":"1.0"},{"id":"006@1.0","host":"http://openfaas:8080","cfg":"1.0"}]},{"id":"031@1.0","host":"https://frmfaas.sybrin.com/function/off-typology-processor","cfg":"031@1.0","rules":[{"id":"003@1.0","host":"http://openfaas:8080","cfg":"1.0"},{"id":"007@1.0","host":"http://openfaas:8080","cfg":"1.0"}]}]}]}]}',
@@ -95,9 +97,8 @@ describe('Logic Service', () => {
     it('should handle successful request, with a matched number', async () => {
       const expectedReq = getMockTransaction();
 
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '', prcgTm: 0 }];
       const networkMap = getMockNetworkMap();
-      const typologyResult: TypologyResult = getMockTypologyResult(ruleResults);
+      const typologyResult: TypologyResult = getMockTypologyResult(createRuleResults());
 
       await handleTransaction({
         transaction: expectedReq,
@@ -119,9 +120,8 @@ describe('Logic Service', () => {
         );
       });
 
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '', prcgTm: 0 }];
       const networkMap = getMockNetworkMapWithMultipleChannels();
-      const typologyResult: TypologyResult = getMockTypologyResult(ruleResults);
+      const typologyResult: TypologyResult = getMockTypologyResult(createRuleResults());
 
       await handleTransaction({
         transaction: expectedReq,
@@ -153,10 +153,9 @@ describe('Logic Service', () => {
 
     it('should handle successful request, not all results yet', async () => {
       const expectedReq = getMockTransaction();
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '', prcgTm: 0 }];
 
       const networkMap = getMockNetworkMapWithMultipleChannels();
-      const typologyResult: TypologyResult = getMockTypologyResult(ruleResults);
+      const typologyResult: TypologyResult = getMockTypologyResult(createRuleResults());
 
       await handleTransaction({
         transaction: expectedReq,
@@ -169,10 +168,9 @@ describe('Logic Service', () => {
 
     it('should respond with error if cache key deletion fails', async () => {
       const expectedReq = getMockTransaction();
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '', prcgTm: 0 }];
 
       const networkMap = getMockNetworkMapWithMultipleChannels();
-      const typologyResult: TypologyResult = getMockTypologyResult(ruleResults);
+      const typologyResult: TypologyResult = getMockTypologyResult(createRuleResults());
 
       await handleTransaction({
         transaction: expectedReq,
@@ -185,14 +183,13 @@ describe('Logic Service', () => {
 
     it('should respond with error if nothing comes back from cache', async () => {
       const expectedReq = getMockTransaction();
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '', prcgTm: 0 }];
 
       jest.spyOn(databaseManager, 'deleteKey').mockRejectedValueOnce((key: string) => {
         return Promise.reject();
       });
 
       const networkMap = getMockNetworkMap();
-      const typologyResult: TypologyResult = getMockTypologyResult(ruleResults);
+      const typologyResult: TypologyResult = getMockTypologyResult(createRuleResults());
 
       await handleTransaction({
         transaction: expectedReq,
@@ -205,14 +202,13 @@ describe('Logic Service', () => {
 
     it('should respond with error if NATS communication Error Occures', async () => {
       const expectedReq = getMockTransaction();
-      const ruleResults: RuleResult[] = [{ result: true, id: '', cfg: '', subRuleRef: '', reason: '', desc: '', prcgTm: 0 }];
 
       jest.spyOn(server, 'handleResponse').mockRejectedValueOnce((value: string) => {
         return Promise.reject();
       });
 
       const networkMap = getMockNetworkMap();
-      const typologyResult: TypologyResult = getMockTypologyResult(ruleResults);
+      const typologyResult: TypologyResult = getMockTypologyResult(createRuleResults());
 
       await handleTransaction({
         transaction: expectedReq,
