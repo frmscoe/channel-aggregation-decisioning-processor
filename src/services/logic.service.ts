@@ -3,7 +3,7 @@ import apm from '../apm';
 import { type Channel, type NetworkMap, type Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 import { type ChannelResult } from '@frmscoe/frms-coe-lib/lib/interfaces/processor-files/ChannelResult';
 import { TypologyResult } from '@frmscoe/frms-coe-lib/lib/interfaces/processor-files/TypologyResult';
-import { databaseManager, loggerService, server } from '..';
+import { databaseManager, loggerService, serialiseTPResult, server } from '..';
 import { type ExecRequest, type MetaData, type TadpReqBody } from '../interfaces/types';
 
 const calculateDuration = (startTime: bigint): number => {
@@ -23,7 +23,7 @@ const executeRequest = async (
   try {
     const transactionID = transaction.FIToFIPmtSts.GrpHdr.MsgId;
     const cacheKey = `CADP_${transactionID}_${channel.id}_${channel.cfg}`;
-    const jtypologyCount = await databaseManager.addOneGetCount(cacheKey, JSON.stringify(typologyResult));
+    const jtypologyCount = await databaseManager.addOneGetCount(cacheKey, serialiseTPResult(typologyResult));
 
     // check if all results for this Channel is found
     if (jtypologyCount && jtypologyCount < channel.typologies.length) {
