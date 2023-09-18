@@ -4,7 +4,9 @@ import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-
 import cluster from 'cluster';
 import os from 'os';
 import { config } from './config';
+import fastJson from 'fast-json-stringify';
 import { handleTransaction } from './services/logic.service';
+import { messageSchema } from '@frmscoe/frms-coe-lib/lib/helpers/schemas/message';
 
 const databaseManagerConfig = {
   redisConfig: {
@@ -14,6 +16,11 @@ const databaseManagerConfig = {
     isCluster: config.redis.isCluster,
   },
 };
+
+export const serialiseTPResult = fastJson({
+  title: 'TP Result Schema',
+  ...messageSchema.definitions,
+});
 
 export const loggerService: LoggerService = new LoggerService();
 let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;

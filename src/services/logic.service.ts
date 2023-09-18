@@ -3,7 +3,7 @@ import apm from '../apm';
 import { type Channel, type NetworkMap, type Pacs002 } from '@frmscoe/frms-coe-lib/lib/interfaces';
 import { type ChannelResult } from '@frmscoe/frms-coe-lib/lib/interfaces/processor-files/ChannelResult';
 import { TypologyResult } from '@frmscoe/frms-coe-lib/lib/interfaces/processor-files/TypologyResult';
-import { databaseManager, loggerService, server } from '..';
+import { databaseManager, loggerService, serialiseTPResult, server } from '..';
 import { type ExecRequest, type MetaData, type TadpReqBody } from '../interfaces/types';
 
 const calculateDuration = (startTime: bigint): number => {
@@ -23,7 +23,7 @@ const executeRequest = async (
   try {
     const transactionID = transaction.FIToFIPmtSts.GrpHdr.MsgId;
     const cacheKey = `CADP_${transactionID}_${channel.id}_${channel.cfg}`;
-    const jtypologyCount = await databaseManager.addOneGetCount(cacheKey, JSON.stringify(typologyResult));
+    const jtypologyCount = await databaseManager.addOneGetCount(cacheKey, serialiseTPResult({ typologyResult }));
 
     // check if all results for this Channel is found
     if (jtypologyCount && jtypologyCount < channel.typologies.length) {
@@ -39,7 +39,7 @@ const executeRequest = async (
     if (jtypologyResults && jtypologyResults.length > 0) {
       for (const jtypologyResult of jtypologyResults) {
         const typoRes: TypologyResult = new TypologyResult();
-        Object.assign(typoRes, JSON.parse(jtypologyResult));
+        Object.assign(typoRes, JSON.parse(jtypologyResult).typologyResult);
         typologyResults.push(typoRes);
       }
     } else
@@ -99,8 +99,6 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
   const metaData = transaction?.metaData as MetaData;
 
   let channelCounter = 0;
-  const toReturn = [];
-  const tadProc = [];
   let channelRes;
   for (const channel of networkMap.messages[0].channels.filter((c) =>
     c.typologies.some((t) => t.id === typologyResult.id && t.cfg === typologyResult.cfg),
@@ -111,9 +109,7 @@ export const handleTransaction = async (transaction: any): Promise<void> => {
     const apmTransaction = apm.startTransaction(`cadproc.exec.${channel.id}`, {
       childOf: traceParent,
     });
-    channelRes = await executeRequest(pacs002, channel, networkMap, typologyResult, metaData);
+    await executeRequest(pacs002, channel, networkMap, typologyResult, metaData);
     apmTransaction?.end();
-    toReturn.push(`{"Channel": ${channel.id}, "Result":${JSON.stringify(channelRes.result)}}`);
-    tadProc.push({ tadProc: channelRes.tadpReqBody });
   }
 };
