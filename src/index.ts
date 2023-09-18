@@ -4,7 +4,7 @@ import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-
 import cluster from 'cluster';
 import os from 'os';
 import { config } from './config';
-import fastJson from 'fast-json-stringify';
+import fastJson, { type AnySchema } from 'fast-json-stringify';
 import { handleTransaction } from './services/logic.service';
 import { messageSchema } from '@frmscoe/frms-coe-lib/lib/helpers/schemas/message';
 
@@ -17,10 +17,17 @@ const databaseManagerConfig = {
   },
 };
 
-export const serialiseTPResult = fastJson({
+const schema = {
   title: 'TP Result Schema',
+  definitions: {
+    ruleResult: {
+      ...messageSchema.definitions.ruleResult,
+    },
+  },
   ...messageSchema.definitions.typologyResult,
-});
+};
+
+export const serialiseTPResult = fastJson(schema as AnySchema);
 
 export const loggerService: LoggerService = new LoggerService();
 let databaseManager: DatabaseManagerInstance<typeof databaseManagerConfig>;
