@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+sed -i "s|ENV CODEVERSION=cshezi|ENV CODEVERSION= |g" Dockerfile
+
 # Define the variable name and the new value
 VARIABLE_NAME="CODEVERSION"
 LAST_COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
