@@ -1,4 +1,19 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+# Define the variable name and the new value
+VARIABLE_NAME="CODEVERSION"
+LAST_COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
+
+# Specify the Dockerfile path
+DOCKERFILE="Dockerfile"
+
+# Use sed to replace the variable value in the Dockerfile
+sed -i "s/^\($VARIABLE_NAME\s*=\s*\).*\$/\1'$LAST_COMMIT_MESSAGE'/" "$DOCKERFILE"
+
+# Stage the modified Dockerfile
+git add "$DOCKERFILE"
+
 npm test
+
+exit 0
