@@ -14,7 +14,7 @@ sed -i "s|ENV CODEVERSION=|ENV CODEVERSION="$(git log -1 --pretty=format:"%s")" 
 # Stage the modified Dockerfile
 git add Dockerfile
 
-git commit -M "$(git log -1 --pretty=format:"%s") Code Version"
+git commit -M $(git log -1 --pretty=format:"%s")
 
 
 npm test
