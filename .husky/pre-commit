@@ -11,7 +11,7 @@ LAST_COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
 DOCKERFILE="Dockerfile"
 
 # Use sed to replace the variable value in the Dockerfile
-sed -i "s|ENV CODEVERSION=|ENV CODEVERSION=$(git log -1 --pretty=format:"%an") |g" Dockerfile
+sed -i "s|ENV CODEVERSION=|ENV CODEVERSION=$(git log -1 --pretty=format:"%an")ZZ |g" Dockerfile
 
 # Stage the modified Dockerfile
 git add Dockerfile
