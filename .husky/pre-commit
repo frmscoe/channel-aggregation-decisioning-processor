@@ -7,9 +7,6 @@ sed -i "s|ENV CODEVERSION=.*|ENV CODEVERSION= |g" Dockerfile
 VARIABLE_NAME="CODEVERSION"
 LAST_COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
 
-# Specify the Dockerfile path
-DOCKERFILE="Dockerfile"
-
 
 # Use sed to replace the variable value in the Dockerfile
 sed -i "s|ENV CODEVERSION=|ENV CODEVERSION=\"$(git log -1 --pretty=format:"%s")\" |g" Dockerfile
